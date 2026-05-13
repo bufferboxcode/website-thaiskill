@@ -77,7 +77,9 @@ function parseCSV(csv: string): Record<string, number | string> {
     if (parts.length < 2) return
     const key = parts[0].trim().replace(/^"|"$/g, '')
     const raw = parts.slice(1).join(',').trim().replace(/^"|"$/g, '')
-    const num = parseFloat(raw.replace(/,/g, ''))
+    // strip ฿ symbol, spaces, commas → parse number
+    const cleaned = raw.replace(/[฿$€£\s,]/g, '')
+    const num = parseFloat(cleaned)
     if (key) data[key] = isNaN(num) ? raw : num
   })
   return data
