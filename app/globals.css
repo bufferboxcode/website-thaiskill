@@ -527,6 +527,7 @@ html, body {
   color: var(--accent);
   font-weight: 400;
 }
+#rateLabel { display: none; }
 
 .live-badge {
   display: inline-flex;
