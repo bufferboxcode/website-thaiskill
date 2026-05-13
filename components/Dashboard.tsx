@@ -194,12 +194,12 @@ async function dbFetch() {
   }
 }
 
-// Bill elements for large bars (12 bills)
+// Bill elements for large bars (20 bills)
+const B20 = Array.from({ length: 20 })
+// Bill elements for small bars (12 bills)
 const B12 = Array.from({ length: 12 })
-// Bill elements for small bars (8 bills)
-const B8  = Array.from({ length: 8  })
-// Bill elements for customer bar (8 green bills)
-const B8G = Array.from({ length: 8  })
+// Bill elements for customer bar (12 green bills)
+const B12G = Array.from({ length: 12 })
 
 export default function Dashboard() {
   const dbInitedRef = useRef(false)
@@ -278,7 +278,7 @@ export default function Dashboard() {
               {/* Bar */}
               <div className="mbar-track">
                 <div className="mbar-fill" id="dbBarRevenue">
-                  {B12.map((_, i) => <span key={i} className="mbill" />)}
+                  {B20.map((_, i) => <span key={i} className="mbill" />)}
                   <div className="mbar-shine" />
                 </div>
                 <div className="mbar-edge-glow" />
@@ -322,7 +322,7 @@ export default function Dashboard() {
                 </div>
                 <div className="mbar-track">
                   <div className="mbar-fill green" id="dbBarCustomers">
-                    {B8G.map((_, i) => <span key={i} className="mbill green" />)}
+                    {B12G.map((_, i) => <span key={i} className="mbill green" />)}
                     <div className="mbar-shine" />
                   </div>
                 </div>
@@ -346,7 +346,7 @@ export default function Dashboard() {
               <div className="mbar-outer sm">
                 <div className="mbar-track">
                   <div className="mbar-fill" id="dbBarPeaIn">
-                    {B8.map((_, i) => <span key={i} className="mbill sm" />)}
+                    {B12.map((_, i) => <span key={i} className="mbill sm" />)}
                     <div className="mbar-shine" />
                   </div>
                 </div>
@@ -364,7 +364,7 @@ export default function Dashboard() {
               <div className="mbar-outer sm">
                 <div className="mbar-track">
                   <div className="mbar-fill" id="dbBarPeaOut">
-                    {B8.map((_, i) => <span key={i} className="mbill sm" />)}
+                    {B12.map((_, i) => <span key={i} className="mbill sm" />)}
                     <div className="mbar-shine" />
                   </div>
                 </div>
@@ -382,7 +382,7 @@ export default function Dashboard() {
               <div className="mbar-outer sm">
                 <div className="mbar-track">
                   <div className="mbar-fill" id="dbBarCarbonOut">
-                    {B8.map((_, i) => <span key={i} className="mbill sm" />)}
+                    {B12.map((_, i) => <span key={i} className="mbill sm" />)}
                     <div className="mbar-shine" />
                   </div>
                 </div>
@@ -400,7 +400,7 @@ export default function Dashboard() {
               <div className="mbar-outer sm">
                 <div className="mbar-track">
                   <div className="mbar-fill" id="dbBarCarbonIn">
-                    {B8.map((_, i) => <span key={i} className="mbill sm" />)}
+                    {B12.map((_, i) => <span key={i} className="mbill sm" />)}
                     <div className="mbar-shine" />
                   </div>
                 </div>
