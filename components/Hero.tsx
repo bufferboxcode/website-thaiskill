@@ -2,8 +2,8 @@
 
 import { useEffect, useRef } from 'react'
 
-const BASE_REVENUE = 48_320_750
-const RATE_PER_SEC = 1_240
+const SHEETS_CSV_URL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vQ6P9WqCiP8Nq5p_TBvXF2VmG9VpTzwj2Sx_CmPmjRZ12EFuTRbqP5yWz_Nk0H10P8EnmAjet9rwmNF/pub?output=csv'
+const FLUCTUATION = 5000   // counter wanders ±5,000 from the live base
 const BASE_ORDERS = 3_847
 const BASE_TODAY = 284_500
 
@@ -75,16 +75,52 @@ export default function Hero() {
   const frozenBadgeRef = useRef<HTMLDivElement>(null)
 
   useEffect(() => {
-    let revenue = BASE_REVENUE
+    let baseRevenue = 0        // live value from Google Sheets
+    let loaded = false
+    let offset = 0             // current wander offset (stays within ±FLUCTUATION)
+    let targetOffset = 0       // next wander target
+    let lastTargetChange = 0   // timestamp of last target pick
+
     let orders = BASE_ORDERS
     let todayRev = BASE_TODAY
     let lastTime = performance.now()
-    let animCurrent = BASE_REVENUE
+    let animCurrent = 0
     let isCounterHovered = false
     let frozenValue = 0
     let particles: Particle[] = []
     let particleRaf = 0
     let animRaf = 0
+
+    // Fetch live base value from the same Google Sheets as the dashboard
+    function fetchBase() {
+      fetch(SHEETS_CSV_URL + '&nocache=' + Date.now())
+        .then(r => r.text())
+        .then(csv => {
+          const lines = csv.trim().split('\n')
+          for (const line of lines) {
+            const cols = line.split(',')
+            const key = cols[0]?.trim().replace(/"/g, '')
+            if (key === 'revenue_current') {
+              const raw = (cols[1] ?? '').trim().replace(/"/g, '')
+              const cleaned = raw.replace(/[฿$€£\s,]/g, '')
+              const n = parseFloat(cleaned)
+              if (!isNaN(n) && n > 0) {
+                baseRevenue = n
+                animCurrent = n
+                loaded = true
+              }
+              break
+            }
+          }
+        })
+        .catch(() => {
+          // fallback to dashboard default
+          baseRevenue = 6_151_200
+          animCurrent = baseRevenue
+          loaded = true
+        })
+    }
+    fetchBase()
 
     const canvas = canvasRef.current
     const counterCard = counterCardRef.current
@@ -130,25 +166,31 @@ export default function Hero() {
       const dt = (ts - lastTime) / 1000
       lastTime = ts
 
-      const earned = RATE_PER_SEC * dt
-      revenue += earned
-      todayRev += earned * 0.7
+      if (loaded) {
+        // Every 4 s pick a new wander target within ±FLUCTUATION
+        if (ts - lastTargetChange > 4000) {
+          targetOffset = (Math.random() * 2 - 1) * FLUCTUATION
+          lastTargetChange = ts
+        }
+        // Smoothly approach target
+        offset += (targetOffset - offset) * Math.min(dt * 0.6, 1)
+        animCurrent = baseRevenue + offset
+
+        if (!isCounterHovered) {
+          if (mainCounter) mainCounter.textContent = fmt(animCurrent)
+          const direction = targetOffset >= offset ? '+' : '-'
+          if (rateLabel) rateLabel.textContent = `${direction}฿${fmt(Math.abs(targetOffset - offset))} / ขณะนี้`
+        }
+      }
 
       if (Math.random() < dt / 28) {
         orders++
         if (orderChg) orderChg.textContent = `▲ +${orders - BASE_ORDERS} วันนี้`
       }
 
-      animCurrent += (revenue - animCurrent) * Math.min(dt * 6, 1)
-
-      if (!isCounterHovered) {
-        if (mainCounter) mainCounter.textContent = fmt(animCurrent)
-        if (rateLabel) rateLabel.textContent = `+฿${fmt(RATE_PER_SEC)} / วินาที`
-      }
-
       if (todayEl) todayEl.textContent = `฿${fmt(todayRev)}`
       if (orderEl) orderEl.textContent = fmt(orders)
-      if (avgEl) avgEl.textContent = `฿${fmt(revenue / orders)}`
+      if (loaded && avgEl) avgEl.textContent = `฿${fmt(animCurrent / orders)}`
 
       const todayPct = ((todayRev / (BASE_TODAY * 0.88) - 1) * 100).toFixed(1)
       if (todayChg) todayChg.textContent = `▲ +${todayPct}% vs เมื่อวาน`
