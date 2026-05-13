@@ -31,8 +31,6 @@ const DB_DEFAULT = {
 
 type DbData = typeof DB_DEFAULT & Record<string, number | string>
 
-const DB_ARC = 251
-
 function dbFmt(n: number, dec = 2) {
   return Number(n).toLocaleString('th-TH', {
     minimumFractionDigits: dec,
@@ -47,11 +45,12 @@ function dbShort(n: number) {
   return dbFmtInt(n)
 }
 
-function dbSetGauge(id: string, value: number, max: number) {
+// Replace SVG gauge with horizontal money bar width
+function dbSetBar(id: string, value: number, max: number) {
   const el = document.getElementById(id)
   if (!el) return
-  const pct = max > 0 ? Math.min(value / max, 1) : 0
-  ;(el as unknown as SVGPathElement).style.strokeDashoffset = String(DB_ARC * (1 - pct))
+  const pct = max > 0 ? Math.min(value / max * 100, 100) : 0
+  el.style.width = pct.toFixed(2) + '%'
 }
 
 function dbCountUp(id: string, target: number, dec = 0) {
@@ -77,7 +76,6 @@ function parseCSV(csv: string): Record<string, number | string> {
     if (parts.length < 2) return
     const key = parts[0].trim().replace(/^"|"$/g, '')
     const raw = parts.slice(1).join(',').trim().replace(/^"|"$/g, '')
-    // strip ฿ symbol, spaces, commas → parse number
     const cleaned = raw.replace(/[฿$€£\s,]/g, '')
     const num = parseFloat(cleaned)
     if (key) data[key] = isNaN(num) ? raw : num
@@ -94,7 +92,7 @@ function dbRender(data: Partial<DbData>) {
   if (revPctEl) revPctEl.textContent = revPct.toFixed(2) + '%'
   const revTgtLbl = document.getElementById('dbRevenueTargetLbl')
   if (revTgtLbl) revTgtLbl.textContent = dbShort(Number(d.revenue_target))
-  dbSetGauge('dbGaugeRevenue', Number(d.revenue_current), Number(d.revenue_target))
+  dbSetBar('dbBarRevenue', Number(d.revenue_current), Number(d.revenue_target))
 
   dbCountUp('dbProjectedRevenue',   Number(d.projected_revenue),  2)
   dbCountUp('dbOperatingCost',      Number(d.operating_cost),     2)
@@ -108,22 +106,22 @@ function dbRender(data: Partial<DbData>) {
   if (custPctEl) custPctEl.textContent = custPct.toFixed(2) + '%'
   const custTgtLbl = document.getElementById('dbCustomerTargetLbl')
   if (custTgtLbl) custTgtLbl.textContent = dbShort(Number(d.total_customers_target))
-  dbSetGauge('dbGaugeCustomers', Number(d.total_customers), Number(d.total_customers_target))
+  dbSetBar('dbBarCustomers', Number(d.total_customers), Number(d.total_customers_target))
 
-  function setTarget(gaugeId: string, valId: string, goalId: string, pctId: string, revenue: number, target: number) {
+  function setTarget(barId: string, valId: string, goalId: string, pctId: string, revenue: number, target: number) {
     dbCountUp(valId, revenue, 2)
     const goalEl = document.getElementById(goalId)
     if (goalEl) goalEl.textContent = 'เป้าหมาย ' + dbShort(target)
     const pct = target > 0 ? revenue / target * 100 : 0
     const pctEl = document.getElementById(pctId)
     if (pctEl) pctEl.textContent = pct.toFixed(2) + '%'
-    dbSetGauge(gaugeId, revenue, target)
+    dbSetBar(barId, revenue, target)
   }
 
-  setTarget('dbGaugePeaIn',     'dbPeaIn',     'dbPeaInGoal',     'dbPeaInPct',     Number(d.pea_internal_revenue),    Number(d.pea_internal_target))
-  setTarget('dbGaugePeaOut',    'dbPeaOut',    'dbPeaOutGoal',    'dbPeaOutPct',    Number(d.pea_external_revenue),    Number(d.pea_external_target))
-  setTarget('dbGaugeCarbonOut', 'dbCarbonOut', 'dbCarbonOutGoal', 'dbCarbonOutPct', Number(d.carbon_external_revenue), Number(d.carbon_external_target))
-  setTarget('dbGaugeCarbonIn',  'dbCarbonIn',  'dbCarbonInGoal',  'dbCarbonInPct',  Number(d.carbon_internal_revenue), Number(d.carbon_internal_target))
+  setTarget('dbBarPeaIn',     'dbPeaIn',     'dbPeaInGoal',     'dbPeaInPct',     Number(d.pea_internal_revenue),    Number(d.pea_internal_target))
+  setTarget('dbBarPeaOut',    'dbPeaOut',    'dbPeaOutGoal',    'dbPeaOutPct',    Number(d.pea_external_revenue),    Number(d.pea_external_target))
+  setTarget('dbBarCarbonOut', 'dbCarbonOut', 'dbCarbonOutGoal', 'dbCarbonOutPct', Number(d.carbon_external_revenue), Number(d.carbon_external_target))
+  setTarget('dbBarCarbonIn',  'dbCarbonIn',  'dbCarbonInGoal',  'dbCarbonInPct',  Number(d.carbon_internal_revenue), Number(d.carbon_internal_target))
 
   const pl = Number(d.revenue_current) - Number(d.operating_cost)
   const plEl = document.getElementById('dbProfitLoss')
@@ -162,15 +160,14 @@ function dbRender(data: Partial<DbData>) {
   }
 }
 
-// label คงที่เสมอ — dot สีบอก status การเชื่อมต่อ
 function dbSetStatus(state: string) {
   const dot = document.getElementById('dbSyncDot')
   if (!dot) return
   const colors: Record<string, string> = {
-    live:    '#10b981', // เขียว = เชื่อมต่อสำเร็จ
-    loading: '#f59e0b', // เหลือง = กำลังโหลด
-    error:   '#f43f5e', // แดง   = error
-    demo:    '#8b5cf6', // ม่วง  = ใช้ค่า demo
+    live:    '#10b981',
+    loading: '#f59e0b',
+    error:   '#f43f5e',
+    demo:    '#8b5cf6',
   }
   dot.style.background = colors[state] || '#8b5cf6'
 }
@@ -197,11 +194,17 @@ async function dbFetch() {
   }
 }
 
+// Bill elements for large bars (12 bills)
+const B12 = Array.from({ length: 12 })
+// Bill elements for small bars (8 bills)
+const B8  = Array.from({ length: 8  })
+// Bill elements for customer bar (8 green bills)
+const B8G = Array.from({ length: 8  })
+
 export default function Dashboard() {
   const dbInitedRef = useRef(false)
 
   useEffect(() => {
-    // Scroll reveal observer
     const revealEls = document.querySelectorAll('#dashboard .db-reveal')
     const dbObserver = new IntersectionObserver(entries => {
       entries.forEach(e => {
@@ -217,7 +220,6 @@ export default function Dashboard() {
 
     revealEls.forEach(el => dbObserver.observe(el))
 
-    // Refresh button
     const dbRefBtn = document.getElementById('dbRefreshBtn')
     const handleRefresh = function (this: HTMLElement) {
       const icon = this.querySelector('span')
@@ -230,7 +232,6 @@ export default function Dashboard() {
     }
     if (dbRefBtn) dbRefBtn.addEventListener('click', handleRefresh as EventListener)
 
-    // Auto poll
     const pollInterval = POLL_MS > 0 ? setInterval(dbFetch, POLL_MS) : null
 
     return () => {
@@ -242,20 +243,6 @@ export default function Dashboard() {
 
   return (
     <section className="db-section" id="dashboard">
-      {/* SVG gradient defs */}
-      <svg width="0" height="0" style={{position:'absolute',overflow:'hidden'}} aria-hidden="true">
-        <defs>
-          <linearGradient id="dbGradBlue" x1="0%" y1="0%" x2="100%" y2="0%">
-            <stop offset="0%" stopColor="#0369a1"/>
-            <stop offset="100%" stopColor="#38bdf8"/>
-          </linearGradient>
-          <linearGradient id="dbGradGreen" x1="0%" y1="0%" x2="100%" y2="0%">
-            <stop offset="0%" stopColor="#059669"/>
-            <stop offset="100%" stopColor="#34d399"/>
-          </linearGradient>
-        </defs>
-      </svg>
-
       <div className="db-container">
 
         {/* Header */}
@@ -277,22 +264,27 @@ export default function Dashboard() {
         {/* Row 1: Overview */}
         <div className="db-overview-row">
 
-          {/* Revenue gauge (large) */}
+          {/* Revenue money bar (large) */}
           <div className="db-card db-card-revenue db-reveal d1">
             <div className="db-card-top-shine"></div>
             <div className="db-card-label">รายได้จากการดำเนินการ (ณ ปัจจุบัน)</div>
-            <div className="db-gauge-wrap">
-              <svg className="db-gauge-svg" viewBox="0 0 200 120" fill="none">
-                <path className="db-gauge-track" d="M 20 105 A 80 80 0 0 1 180 105"/>
-                <path className="db-gauge-fill" id="dbGaugeRevenue"
-                      d="M 20 105 A 80 80 0 0 1 180 105"
-                      stroke="url(#dbGradBlue)"/>
-              </svg>
-              <div className="db-gauge-center" style={{bottom:'20px'}}>
+
+            <div className="mbar-outer">
+              {/* Value & % above bar */}
+              <div className="mbar-top-row">
                 <div className="db-gauge-val lg" id="dbRevenueCurrent">0</div>
                 <div className="db-gauge-pct" id="dbRevenuePct">0%</div>
               </div>
-              <div className="db-gauge-labels">
+              {/* Bar */}
+              <div className="mbar-track">
+                <div className="mbar-fill" id="dbBarRevenue">
+                  {B12.map((_, i) => <span key={i} className="mbill" />)}
+                  <div className="mbar-shine" />
+                </div>
+                <div className="mbar-edge-glow" />
+              </div>
+              {/* Min / Max labels */}
+              <div className="mbar-foot-row">
                 <span>0</span>
                 <span id="dbRevenueTargetLbl">50M</span>
               </div>
@@ -319,20 +311,22 @@ export default function Dashboard() {
                 <div className="db-stat-val sm" id="dbPeaCustomers">0</div>
               </div>
             </div>
-            <div className="db-stat-card db-reveal d3" style={{padding:'20px 22px'}}>
+
+            {/* Customer money bar */}
+            <div className="db-stat-card db-reveal d3" style={{padding:'18px 20px'}}>
               <div className="db-customers-label">จำนวนลูกค้าทั้งหมด</div>
-              <div className="db-gauge-wrap">
-                <svg className="db-gauge-svg" viewBox="0 0 200 120" fill="none">
-                  <path className="db-gauge-track" d="M 20 105 A 80 80 0 0 1 180 105"/>
-                  <path className="db-gauge-fill green" id="dbGaugeCustomers"
-                        d="M 20 105 A 80 80 0 0 1 180 105"
-                        stroke="url(#dbGradGreen)"/>
-                </svg>
-                <div className="db-gauge-center" style={{bottom:'12px'}}>
+              <div className="mbar-outer sm">
+                <div className="mbar-top-row sm">
                   <div className="db-gauge-val" id="dbTotalCustomers">0</div>
                   <div className="db-gauge-pct green" id="dbTotalCustomersPct">0%</div>
                 </div>
-                <div className="db-gauge-labels">
+                <div className="mbar-track">
+                  <div className="mbar-fill green" id="dbBarCustomers">
+                    {B8G.map((_, i) => <span key={i} className="mbill green" />)}
+                    <div className="mbar-shine" />
+                  </div>
+                </div>
+                <div className="mbar-foot-row">
                   <span>0</span>
                   <span id="dbCustomerTargetLbl">10K</span>
                 </div>
@@ -348,62 +342,81 @@ export default function Dashboard() {
 
             {/* PEA ภายใน */}
             <div className="db-target-card">
-              <svg viewBox="0 0 200 120" fill="none" style={{width:'100%'}}>
-                <path className="db-gauge-track" d="M 20 105 A 80 80 0 0 1 180 105"/>
-                <path className="db-gauge-fill" id="dbGaugePeaIn"
-                      d="M 20 105 A 80 80 0 0 1 180 105" stroke="url(#dbGradBlue)"/>
-              </svg>
-              <div className="db-target-val"  id="dbPeaIn">0</div>
-              <div className="db-target-goal" id="dbPeaInGoal">เป้าหมาย 40M</div>
-              <div className="db-target-pct"  id="dbPeaInPct">0%</div>
               <div className="db-target-name">PEA Academy ภายใน</div>
+              <div className="mbar-outer sm">
+                <div className="mbar-track">
+                  <div className="mbar-fill" id="dbBarPeaIn">
+                    {B8.map((_, i) => <span key={i} className="mbill sm" />)}
+                    <div className="mbar-shine" />
+                  </div>
+                </div>
+              </div>
+              <div className="db-target-nums">
+                <span className="db-target-val" id="dbPeaIn">0</span>
+                <span className="db-target-pct" id="dbPeaInPct">0%</span>
+              </div>
+              <div className="db-target-goal" id="dbPeaInGoal">เป้าหมาย 40M</div>
             </div>
 
             {/* PEA ภายนอก */}
             <div className="db-target-card">
-              <svg viewBox="0 0 200 120" fill="none" style={{width:'100%'}}>
-                <path className="db-gauge-track" d="M 20 105 A 80 80 0 0 1 180 105"/>
-                <path className="db-gauge-fill" id="dbGaugePeaOut"
-                      d="M 20 105 A 80 80 0 0 1 180 105" stroke="url(#dbGradBlue)"/>
-              </svg>
-              <div className="db-target-val"  id="dbPeaOut">0</div>
-              <div className="db-target-goal" id="dbPeaOutGoal">เป้าหมาย 6M</div>
-              <div className="db-target-pct"  id="dbPeaOutPct">0%</div>
               <div className="db-target-name">PEA Academy ภายนอก</div>
+              <div className="mbar-outer sm">
+                <div className="mbar-track">
+                  <div className="mbar-fill" id="dbBarPeaOut">
+                    {B8.map((_, i) => <span key={i} className="mbill sm" />)}
+                    <div className="mbar-shine" />
+                  </div>
+                </div>
+              </div>
+              <div className="db-target-nums">
+                <span className="db-target-val" id="dbPeaOut">0</span>
+                <span className="db-target-pct" id="dbPeaOutPct">0%</span>
+              </div>
+              <div className="db-target-goal" id="dbPeaOutGoal">เป้าหมาย 6M</div>
             </div>
 
             {/* Carbon ภายนอก */}
             <div className="db-target-card">
-              <svg viewBox="0 0 200 120" fill="none" style={{width:'100%'}}>
-                <path className="db-gauge-track" d="M 20 105 A 80 80 0 0 1 180 105"/>
-                <path className="db-gauge-fill" id="dbGaugeCarbonOut"
-                      d="M 20 105 A 80 80 0 0 1 180 105" stroke="url(#dbGradBlue)"/>
-              </svg>
-              <div className="db-target-val"  id="dbCarbonOut">0</div>
-              <div className="db-target-goal" id="dbCarbonOutGoal">เป้าหมาย 2M</div>
-              <div className="db-target-pct"  id="dbCarbonOutPct">0%</div>
               <div className="db-target-name">Carbon Form ภายนอก</div>
+              <div className="mbar-outer sm">
+                <div className="mbar-track">
+                  <div className="mbar-fill" id="dbBarCarbonOut">
+                    {B8.map((_, i) => <span key={i} className="mbill sm" />)}
+                    <div className="mbar-shine" />
+                  </div>
+                </div>
+              </div>
+              <div className="db-target-nums">
+                <span className="db-target-val" id="dbCarbonOut">0</span>
+                <span className="db-target-pct" id="dbCarbonOutPct">0%</span>
+              </div>
+              <div className="db-target-goal" id="dbCarbonOutGoal">เป้าหมาย 2M</div>
             </div>
 
             {/* Carbon ภายใน */}
             <div className="db-target-card">
-              <svg viewBox="0 0 200 120" fill="none" style={{width:'100%'}}>
-                <path className="db-gauge-track" d="M 20 105 A 80 80 0 0 1 180 105"/>
-                <path className="db-gauge-fill" id="dbGaugeCarbonIn"
-                      d="M 20 105 A 80 80 0 0 1 180 105" stroke="url(#dbGradBlue)"/>
-              </svg>
-              <div className="db-target-val"  id="dbCarbonIn">0</div>
-              <div className="db-target-goal" id="dbCarbonInGoal">เป้าหมาย 2M</div>
-              <div className="db-target-pct"  id="dbCarbonInPct">0%</div>
               <div className="db-target-name">Carbon Form ภายใน</div>
+              <div className="mbar-outer sm">
+                <div className="mbar-track">
+                  <div className="mbar-fill" id="dbBarCarbonIn">
+                    {B8.map((_, i) => <span key={i} className="mbill sm" />)}
+                    <div className="mbar-shine" />
+                  </div>
+                </div>
+              </div>
+              <div className="db-target-nums">
+                <span className="db-target-val" id="dbCarbonIn">0</span>
+                <span className="db-target-pct" id="dbCarbonInPct">0%</span>
+              </div>
+              <div className="db-target-goal" id="dbCarbonInGoal">เป้าหมาย 2M</div>
             </div>
+
           </div>
         </div>
 
         {/* Row 3: P&L + Cost Table */}
         <div className="db-bottom-row">
-
-          {/* P&L */}
           <div className="db-pl-card db-reveal d3">
             <div className="db-pl-pill">ต้นทุนและงบกำไรขาดทุน</div>
             <div className="db-pl-layout">
@@ -424,7 +437,6 @@ export default function Dashboard() {
             </div>
           </div>
 
-          {/* Cost table */}
           <div className="db-cost-card db-reveal d4">
             <div className="db-cost-pill">รายการค่าใช้จ่ายต้นทุน</div>
             <div className="db-cost-thead">
@@ -435,12 +447,10 @@ export default function Dashboard() {
           </div>
         </div>
 
-        {/* Google Sheets setup notice */}
         <div className="db-setup-notice" id="dbSetupNotice">
           <span>⚙️ เชื่อมต่อ Google Sheets:</span>
           เปิด Google Sheet → ไฟล์ → เผยแพร่ไปยังเว็บ → เลือก CSV
           จากนั้นใส่ Sheet ID ในตัวแปร <code>SHEETS_ID</code> ในโค้ด
-          (รูปแบบตาราง: คอลัมน์ A = key, คอลัมน์ B = value)
         </div>
 
       </div>
