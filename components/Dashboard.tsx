@@ -172,7 +172,7 @@ function dbSetStatus(state: string, label: string) {
 
 async function dbFetch() {
   try {
-    dbSetStatus('loading', 'กำลังโหลดข้อมูล...')
+    dbSetStatus('loading', 'สชก.(บก-ท)')
     const url = SHEETS_CSV_URL + '&nocache=' + Date.now()
     const res = await fetch(url)
     if (!res.ok) throw new Error('HTTP ' + res.status)
@@ -180,7 +180,7 @@ async function dbFetch() {
     const data = parseCSV(csv)
     if (Object.keys(data).length === 0) throw new Error('Sheet ว่างอยู่')
     dbRender(data)
-    dbSetStatus('live', 'Live · Google Sheets ✓')
+    dbSetStatus('live', 'สชก.(บก-ท)')
     const upd = document.getElementById('dbLastUpdate')
     if (upd) upd.textContent = 'อัพเดทล่าสุด: ' + new Date().toLocaleTimeString('th-TH')
     const notice = document.getElementById('dbSetupNotice')
