@@ -91,30 +91,34 @@ export default function Hero() {
     let particleRaf = 0
     let animRaf = 0
 
-    // Fetch live base value from the same Google Sheets as the dashboard
+    // Fetch live base value — same CSV + parsing logic as Dashboard
     function fetchBase() {
       fetch(SHEETS_CSV_URL + '&nocache=' + Date.now())
         .then(r => r.text())
         .then(csv => {
-          const lines = csv.trim().split('\n')
-          for (const line of lines) {
-            const cols = line.split(',')
-            const key = cols[0]?.trim().replace(/"/g, '')
-            if (key === 'revenue_current') {
-              const raw = (cols[1] ?? '').trim().replace(/"/g, '')
-              const cleaned = raw.replace(/[฿$€£\s,]/g, '')
-              const n = parseFloat(cleaned)
-              if (!isNaN(n) && n > 0) {
-                baseRevenue = n
-                animCurrent = n
-                loaded = true
-              }
-              break
+          csv.trim().split(/\r?\n/).forEach(line => {
+            const parts = line.split(',')
+            if (parts.length < 2) return
+            const key = parts[0].trim().replace(/^"|"$/g, '')
+            if (key !== 'revenue_current') return
+            // join remaining parts (currency values contain commas)
+            const raw = parts.slice(1).join(',').trim().replace(/^"|"$/g, '')
+            const cleaned = raw.replace(/[฿$€£\s,]/g, '')
+            const n = parseFloat(cleaned)
+            if (!isNaN(n) && n > 0) {
+              baseRevenue = n
+              animCurrent = n
+              loaded = true
             }
+          })
+          // if key wasn't found, use fallback
+          if (!loaded) {
+            baseRevenue = 6_151_200
+            animCurrent = baseRevenue
+            loaded = true
           }
         })
         .catch(() => {
-          // fallback to dashboard default
           baseRevenue = 6_151_200
           animCurrent = baseRevenue
           loaded = true
