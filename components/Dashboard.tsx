@@ -2,7 +2,7 @@
 
 import { useEffect, useRef } from 'react'
 
-const SHEETS_CSV_URL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vQ6P9WqCiP8Nq5p_TBvXF2VmG9VpTzwj2Sx_CmPmjRZ12EFuTRbqP5yWz_Nk0H10P8EnmAjet9rwmNF/pub?gid=0&single=true&output=csv'
+const SHEETS_CSV_URL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vQ6P9WqCiP8Nq5p_TBvXF2VmG9VpTzwj2Sx_CmPmjRZ12EFuTRbqP5yWz_Nk0H10P8EnmAjet9rwmNF/pub?output=csv'
 const POLL_MS = 30000
 
 const DB_DEFAULT = {
@@ -73,12 +73,11 @@ function dbCountUp(id: string, target: number, dec = 0) {
 function parseCSV(csv: string): Record<string, number | string> {
   const data: Record<string, number | string> = {}
   csv.trim().split(/\r?\n/).forEach(line => {
-    const m = line.match(/^("([^"]*)"|([^,]*)),(.*)$/)
-    if (!m) return
-    const key = (m[2] !== undefined ? m[2] : m[3]).trim()
-    const raw = m[4].trim().replace(/^"|"$/g, '')
-    const cleaned = raw.replace(/[฿$€¥£\s,]/g, '')
-    const num = parseFloat(cleaned)
+    const parts = line.split(',')
+    if (parts.length < 2) return
+    const key = parts[0].trim().replace(/^"|"$/g, '')
+    const raw = parts.slice(1).join(',').trim().replace(/^"|"$/g, '')
+    const num = parseFloat(raw.replace(/,/g, ''))
     if (key) data[key] = isNaN(num) ? raw : num
   })
   return data
@@ -161,18 +160,22 @@ function dbRender(data: Partial<DbData>) {
   }
 }
 
-function dbSetStatus(state: string, label: string) {
+// label คงที่เสมอ — dot สีบอก status การเชื่อมต่อ
+function dbSetStatus(state: string) {
   const dot = document.getElementById('dbSyncDot')
-  const lbl = document.getElementById('dbSyncLabel')
-  if (lbl) lbl.textContent = label
   if (!dot) return
-  const colors: Record<string, string> = { live: '#10b981', loading: '#f59e0b', error: '#f43f5e', demo: '#8b5cf6' }
+  const colors: Record<string, string> = {
+    live:    '#10b981', // เขียว = เชื่อมต่อสำเร็จ
+    loading: '#f59e0b', // เหลือง = กำลังโหลด
+    error:   '#f43f5e', // แดง   = error
+    demo:    '#8b5cf6', // ม่วง  = ใช้ค่า demo
+  }
   dot.style.background = colors[state] || '#8b5cf6'
 }
 
 async function dbFetch() {
   try {
-    dbSetStatus('loading', 'สชก.(บก-ท)')
+    dbSetStatus('loading')
     const url = SHEETS_CSV_URL + '&nocache=' + Date.now()
     const res = await fetch(url)
     if (!res.ok) throw new Error('HTTP ' + res.status)
@@ -180,13 +183,14 @@ async function dbFetch() {
     const data = parseCSV(csv)
     if (Object.keys(data).length === 0) throw new Error('Sheet ว่างอยู่')
     dbRender(data)
-    dbSetStatus('live', 'สชก.(บก-ท)')
+    dbSetStatus('live')
     const upd = document.getElementById('dbLastUpdate')
     if (upd) upd.textContent = 'อัพเดทล่าสุด: ' + new Date().toLocaleTimeString('th-TH')
     const notice = document.getElementById('dbSetupNotice')
     if (notice) (notice as HTMLElement).style.display = 'none'
-  } catch {
-    dbSetStatus('demo', 'สชก.(บก-ท)')
+  } catch (err) {
+    console.warn('[Dashboard] Google Sheets fetch failed:', err)
+    dbSetStatus('error')
     dbRender(DB_DEFAULT)
   }
 }
@@ -261,7 +265,7 @@ export default function Dashboard() {
           <div className="db-header-right">
             <div className="db-sync-wrap">
               <div className="db-sync-dot" id="dbSyncDot"></div>
-              <span className="db-sync-label" id="dbSyncLabel">กำลังเชื่อมต่อ...</span>
+              <span className="db-sync-label" id="dbSyncLabel">สชก.(บก-ท)</span>
             </div>
             <div className="db-last-update" id="dbLastUpdate">อัพเดทล่าสุด: —</div>
             <button className="db-refresh-btn" id="dbRefreshBtn"><span>↻</span> รีเฟรช</button>
