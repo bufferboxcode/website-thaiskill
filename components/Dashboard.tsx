@@ -186,7 +186,7 @@ async function dbFetch() {
     const notice = document.getElementById('dbSetupNotice')
     if (notice) (notice as HTMLElement).style.display = 'none'
   } catch {
-    dbSetStatus('demo', 'Demo — รอข้อมูลจาก Sheet')
+    dbSetStatus('demo', 'สชก.(บก-ท)')
     dbRender(DB_DEFAULT)
   }
 }
