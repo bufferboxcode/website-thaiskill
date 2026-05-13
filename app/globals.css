@@ -1848,47 +1848,55 @@ html, body {
 /* Track: the full-width empty bar */
 .mbar-track {
   width: 100%; height: 48px;
-  background: rgba(255,255,255,0.05);
-  border: 1px solid rgba(255,255,255,0.08);
+  background: rgba(255,255,255,0.04);
+  border: 1px solid rgba(255,255,255,0.12);
   border-radius: 10px;
   overflow: hidden;
   position: relative;
+  box-shadow: inset 0 2px 6px rgba(0,0,0,0.3);
 }
 .mbar-outer.sm .mbar-track { height: 32px; border-radius: 8px; }
 
-/* Fill: percentage-wide, holds the bills */
+/* Fill: white/silver — the accumulated money zone */
 .mbar-fill {
   height: 100%; width: 0%;
   background: linear-gradient(
     90deg,
-    #5c3010 0%,
-    #8b5a20 18%,
-    #c49428 35%,
-    #e8be50 50%,
-    #c49428 65%,
-    #8b5a20 82%,
-    #5c3010 100%
+    #b8c8d8 0%,
+    #dce8f4 20%,
+    #f0f6ff 45%,
+    #ffffff 50%,
+    #f0f6ff 55%,
+    #dce8f4 80%,
+    #b8c8d8 100%
   );
   background-size: 200% 100%;
-  animation: mbarShimmer 3s linear infinite;
+  animation: mbarShimmer 4s linear infinite;
   border-radius: 9px;
   position: relative;
   overflow: hidden;
   transition: width 1.5s cubic-bezier(0.4, 0, 0.2, 1);
-  box-shadow: inset 0 1px 0 rgba(255,255,255,0.18), 0 0 20px rgba(196,148,40,0.35);
+  box-shadow:
+    inset 0 1px 0 rgba(255,255,255,0.9),
+    inset 0 -1px 0 rgba(160,185,210,0.4),
+    0 0 24px rgba(180,210,255,0.25);
 }
+/* Customer bar stays green */
 .mbar-fill.green {
   background: linear-gradient(
     90deg,
-    #064e36 0%,
-    #0a7a52 18%,
-    #10b981 35%,
-    #34d399 50%,
-    #10b981 65%,
-    #0a7a52 82%,
-    #064e36 100%
+    #b8d8c8 0%,
+    #d4eede 20%,
+    #edfaf4 45%,
+    #f5fff9 50%,
+    #edfaf4 55%,
+    #d4eede 80%,
+    #b8d8c8 100%
   );
-  box-shadow: inset 0 1px 0 rgba(255,255,255,0.15), 0 0 20px rgba(16,185,129,0.3);
+  box-shadow:
+    inset 0 1px 0 rgba(255,255,255,0.9),
+    inset 0 -1px 0 rgba(100,180,130,0.4),
+    0 0 20px rgba(52,211,153,0.2);
 }
 
 @keyframes mbarShimmer {
@@ -1896,22 +1904,22 @@ html, body {
   100% { background-position: 200% 0%; }
 }
 
-/* Right-edge glow that pulses — "money still flowing in" feel */
+/* Right-edge glow */
 .mbar-edge-glow {
   position: absolute; right: 0; top: 0; bottom: 0; width: 40px;
-  background: linear-gradient(90deg, transparent, rgba(196,148,40,0.15));
+  background: linear-gradient(90deg, transparent, rgba(180,210,255,0.3));
   pointer-events: none;
   animation: edgePulse 2s ease-in-out infinite;
 }
 @keyframes edgePulse {
-  0%,100% { opacity: 0.4; }
-  50%      { opacity: 1; }
+  0%,100% { opacity: 0.3; }
+  50%      { opacity: 0.9; }
 }
 
-/* Shine sweep inside fill */
+/* Shine sweep */
 .mbar-shine {
   position: absolute; top: 0; left: -60%; width: 50%; height: 100%;
-  background: linear-gradient(90deg, transparent, rgba(255,255,255,0.18), transparent);
+  background: linear-gradient(90deg, transparent, rgba(255,255,255,0.55), transparent);
   animation: mbarSweep 2.8s ease-in-out infinite;
   pointer-events: none;
 }
@@ -1926,72 +1934,92 @@ html, body {
   font: 500 11px var(--font); color: rgba(255,255,255,0.28);
 }
 
-/* ── Thai 1,000-baht bill shapes ─────────────────────────── */
+/* ── Dollar-bundle bill shapes ───────────────────────────── */
 .mbill {
   position: absolute;
-  width: 34px; height: 16px;
+  width: 36px; height: 18px;
   border-radius: 2px;
-  background: linear-gradient(
-    120deg,
-    #3d2008 0%,
-    #7a4a14 15%,
-    #c49428 30%,
-    #e8c048 42%,
-    #f5d060 50%,
-    #c49428 60%,
-    #7a4a14 75%,
-    #3d2008 100%
-  );
-  border: 0.5px solid rgba(240,200,80,0.55);
-  box-shadow: 0 1px 5px rgba(0,0,0,0.55),
-              inset 0 0.5px 0 rgba(255,240,160,0.25);
+  /* Green bill body with subtle depth (like a stack of notes) */
+  background:
+    /* Gold strap band across the middle */
+    linear-gradient(
+      180deg,
+      transparent 28%, #c8920a 28%,
+      #e8b820 38%, #f0c830 42%,
+      #e8b820 52%, #c8920a 58%,
+      transparent 58%
+    ),
+    /* Green bill base with edge shading */
+    linear-gradient(
+      160deg,
+      #0a2e14 0%,
+      #174d26 12%,
+      #1e6630 25%,
+      #267840 40%,
+      #1e6630 55%,
+      #144222 70%,
+      #0d3018 85%,
+      #0a2814 100%
+    );
+  border: 0.5px solid rgba(30,100,50,0.8);
+  box-shadow:
+    0 2px 6px rgba(0,0,0,0.65),
+    0 1px 2px rgba(0,0,0,0.4),
+    inset 0 1px 0 rgba(100,200,120,0.15),
+    inset 0 -1px 0 rgba(0,0,0,0.2);
   overflow: hidden;
   animation: billFly 3s linear infinite;
-  /* position varied per nth-child */
 }
-/* Thai baht symbol */
+/* Portrait / face area hint */
 .mbill::before {
-  content: '฿';
+  content: '';
   position: absolute;
-  left: 4px; top: 50%;
-  transform: translateY(-50%);
-  font-size: 8px; font-weight: 700; line-height: 1;
-  color: rgba(255,240,150,0.75);
+  left: 5px; top: 2px; bottom: 2px; width: 11px;
+  background: radial-gradient(ellipse at center,
+    rgba(180,220,180,0.35) 0%,
+    rgba(60,140,80,0.15) 60%,
+    transparent 100%);
+  border-radius: 1px;
 }
-/* Security lines pattern */
+/* Denomination text area + fine lines */
 .mbill::after {
   content: '';
   position: absolute;
-  inset: 2px;
+  right: 3px; top: 3px; bottom: 3px; width: 10px;
   background: repeating-linear-gradient(
-    90deg,
-    transparent, transparent 3px,
-    rgba(255,220,100,0.1) 3px, rgba(255,220,100,0.1) 4px
+    180deg,
+    transparent, transparent 1.5px,
+    rgba(100,200,120,0.18) 1.5px, rgba(100,200,120,0.18) 2px
   );
   border-radius: 1px;
 }
 
-/* Green bills for customer bar */
+/* Customer bar — slightly lighter green bundle */
 .mbill.green {
-  background: linear-gradient(120deg, #052e1f 0%, #0a5c38 20%, #10b981 40%,
-              #2dd4a0 50%, #10b981 60%, #0a5c38 80%, #052e1f 100%);
-  border-color: rgba(52,211,153,0.4);
-  box-shadow: 0 1px 5px rgba(0,0,0,0.5), inset 0 0.5px 0 rgba(100,255,180,0.2);
-}
-.mbill.green::before { color: rgba(150,255,210,0.7); }
-.mbill.green::after {
-  background: repeating-linear-gradient(
-    90deg, transparent, transparent 3px,
-    rgba(52,211,153,0.12) 3px, rgba(52,211,153,0.12) 4px
-  );
+  background:
+    linear-gradient(
+      180deg,
+      transparent 28%, #a07808 28%,
+      #c8a010 38%, #dab820 42%,
+      #c8a010 52%, #a07808 58%,
+      transparent 58%
+    ),
+    linear-gradient(
+      160deg,
+      #052e18 0%, #0a5232 20%,
+      #0f7048 40%, #0a5232 60%,
+      #073824 80%, #042010 100%
+    );
+  border-color: rgba(20,120,70,0.7);
 }
 
 /* Small bills for target cards */
 .mbill.sm {
-  width: 24px; height: 11px;
+  width: 26px; height: 13px;
   border-radius: 1.5px;
 }
-.mbill.sm::before { font-size: 6px; left: 2px; }
+.mbill.sm::before { width: 7px; left: 3px; }
+.mbill.sm::after  { width: 6px; right: 2px; }
 
 /* Bill positions & timings — 12 bills for large bar */
 .mbill:nth-child(1)  { top: 8%;  right:-36px; rotate:-8deg;  animation-duration:2.8s; animation-delay:0s;     }
