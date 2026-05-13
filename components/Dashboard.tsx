@@ -196,12 +196,12 @@ async function dbFetch() {
   }
 }
 
-// Bill elements for large bars (60 bills)
-const B20 = Array.from({ length: 60 })
-// Bill elements for small bars (36 bills)
-const B12 = Array.from({ length: 36 })
-// Bill elements for customer bar (36 green bills)
-const B12G = Array.from({ length: 36 })
+// Bill elements for large bars (30 bills)
+const B20 = Array.from({ length: 30 })
+// Bill elements for small bars (18 bills)
+const B12 = Array.from({ length: 18 })
+// Bill elements for customer bar (18 green bills)
+const B12G = Array.from({ length: 18 })
 
 export default function Dashboard() {
   const dbInitedRef = useRef(false)
