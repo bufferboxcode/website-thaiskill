@@ -1,14 +1,15 @@
 'use client'
 
 import { useEffect, useRef, useState } from 'react'
-import Image from 'next/image'
 
 export default function Nav() {
   const navWrapperRef = useRef<HTMLDivElement>(null)
   const navPillRef = useRef<HTMLElement>(null)
   const navIndicatorRef = useRef<HTMLDivElement>(null)
   const themeBtnRef = useRef<HTMLButtonElement>(null)
+  const hamburgerWrapRef = useRef<HTMLDivElement>(null)
   const [darkMode, setDarkMode] = useState(false)
+  const [menuOpen, setMenuOpen] = useState(false)
 
   useEffect(() => {
     const navWrapper = navWrapperRef.current
@@ -99,6 +100,17 @@ export default function Nav() {
     }
   }, [])
 
+  // Close mobile menu on outside click
+  useEffect(() => {
+    const handleOutside = (e: MouseEvent) => {
+      if (hamburgerWrapRef.current && !hamburgerWrapRef.current.contains(e.target as Node)) {
+        setMenuOpen(false)
+      }
+    }
+    document.addEventListener('mousedown', handleOutside)
+    return () => document.removeEventListener('mousedown', handleOutside)
+  }, [])
+
   // Theme toggle
   useEffect(() => {
     const root = document.documentElement
@@ -149,6 +161,12 @@ export default function Nav() {
     if (el) el.scrollIntoView({ behavior: 'smooth' })
   }
 
+  const smoothScroll = (id: string) => {
+    const el = document.getElementById(id)
+    if (el) el.scrollIntoView({ behavior: 'smooth' })
+    setMenuOpen(false)
+  }
+
   return (
     <>
       <div className="nav-wrapper" id="navWrapper" ref={navWrapperRef}>
@@ -156,7 +174,8 @@ export default function Nav() {
           <div className="nav-pill-indicator" id="navIndicator" ref={navIndicatorRef}></div>
 
           <a className="nav-logo-inside" href="#hero">
-            <Image src="/thaiskill-logo.svg" alt="Thai Skill" width={120} height={26} />
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img src="/thaiskill-logo.svg" alt="Thai Skill" style={{ height: '26px', width: 'auto', display: 'block' }} />
           </a>
 
           <div className="nav-divider"></div>
@@ -180,6 +199,31 @@ export default function Nav() {
           <button className="nav-cta-pill" onClick={scrollToTeam}>
             ติดต่อเรา
           </button>
+
+          {/* Hamburger — mobile only */}
+          <div
+            ref={hamburgerWrapRef}
+            className={`nav-hamburger-wrap${menuOpen ? ' open' : ''}`}
+            onMouseEnter={() => setMenuOpen(true)}
+            onMouseLeave={() => setMenuOpen(false)}
+          >
+            <button
+              className={`nav-hamburger${menuOpen ? ' open' : ''}`}
+              onClick={() => setMenuOpen(o => !o)}
+              aria-label="เมนู"
+            >
+              <span></span>
+              <span></span>
+              <span></span>
+            </button>
+
+            <div className="nav-mobile-menu">
+              <a className="nav-mobile-item" href="#about" onClick={() => smoothScroll('about')}>เกี่ยวกับเรา</a>
+              <a className="nav-mobile-item" href="#services" onClick={() => smoothScroll('services')}>บริการของเรา</a>
+              <a className="nav-mobile-item" href="#team" onClick={() => smoothScroll('team')}>ทีมของเรา</a>
+              <button className="nav-mobile-cta" onClick={() => { scrollToTeam(); setMenuOpen(false) }}>ติดต่อเรา</button>
+            </div>
+          </div>
         </nav>
       </div>
 
