@@ -203,9 +203,10 @@ export default function Hero() {
     if (counterCard) {
       const mouseEnter = () => {
         isCounterHovered = true
-        frozenValue = animCurrent
-        if (mainCounter) mainCounter.textContent = fmt(frozenValue)
-        if (rateLabel) rateLabel.textContent = '⏸ รายได้จริงขณะนี้ที่ ThaiSkill สร้าง'
+        // Show exact Google Sheets value (no animation offset)
+        frozenValue = baseRevenue
+        if (mainCounter) mainCounter.textContent = fmt(frozenValue, 2)
+        if (rateLabel) rateLabel.textContent = '⏸ รายได้จริงจาก Google Sheets'
         counterCard.classList.add('paused')
         if (frozenBadge) frozenBadge.classList.add('show')
         burstParticles()
