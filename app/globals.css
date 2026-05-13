@@ -435,9 +435,9 @@ html, body {
 
 .counter-card.paused .counter-number {
   animation: numGlow 1.4s ease-in-out infinite alternate;
-  transform: scale(1.08);
-  transform-origin: center;
-  transition: transform 0.4s cubic-bezier(0.34,1.56,0.64,1);
+  /* smaller font so the decimal value (13 chars) fits inside the card */
+  font-size: clamp(28px, 4.2vw, 54px);
+  transform: none;
   display: inline-block;
 }
 @keyframes numGlow {
