@@ -1,0 +1,262 @@
+'use client'
+
+import { useEffect, useRef } from 'react'
+
+const BASE_REVENUE = 48_320_750
+const RATE_PER_SEC = 1_240
+const BASE_ORDERS = 3_847
+const BASE_TODAY = 284_500
+
+function fmt(n: number, decimals = 0) {
+  return Math.floor(n).toLocaleString('th-TH', {
+    minimumFractionDigits: decimals,
+    maximumFractionDigits: decimals,
+  })
+}
+
+class Particle {
+  x: number; y: number; vx: number; vy: number
+  radius: number; alpha: number; decay: number
+  color: string; shape: string; rot: number; rSpeed: number
+
+  constructor(cx: number, cy: number) {
+    this.x = cx; this.y = cy
+    const angle = Math.random() * Math.PI * 2
+    const speed = 1.5 + Math.random() * 4.5
+    this.vx = Math.cos(angle) * speed
+    this.vy = Math.sin(angle) * speed - 2
+    this.radius = 2 + Math.random() * 4
+    this.alpha = 1
+    this.decay = 0.012 + Math.random() * 0.018
+    const palette = ['#38bdf8','#0369a1','#7dd3fc','#e0f2fe','#0891b2','#fbbf24']
+    this.color = palette[Math.floor(Math.random() * palette.length)]
+    this.shape = Math.random() > 0.5 ? 'circle' : 'rect'
+    this.rot = Math.random() * Math.PI * 2
+    this.rSpeed = (Math.random() - 0.5) * 0.15
+  }
+
+  update() {
+    this.x += this.vx
+    this.y += this.vy
+    this.vy += 0.12
+    this.vx *= 0.98
+    this.alpha -= this.decay
+    this.rot += this.rSpeed
+  }
+
+  draw(ctx: CanvasRenderingContext2D) {
+    ctx.save()
+    ctx.globalAlpha = Math.max(0, this.alpha)
+    ctx.fillStyle = this.color
+    ctx.translate(this.x, this.y)
+    ctx.rotate(this.rot)
+    if (this.shape === 'circle') {
+      ctx.beginPath()
+      ctx.arc(0, 0, this.radius, 0, Math.PI * 2)
+      ctx.fill()
+    } else {
+      const s = this.radius * 1.6
+      ctx.fillRect(-s / 2, -s / 2, s, s * 0.6)
+    }
+    ctx.restore()
+  }
+}
+
+export default function Hero() {
+  const canvasRef = useRef<HTMLCanvasElement>(null)
+  const counterCardRef = useRef<HTMLDivElement>(null)
+  const mainCounterRef = useRef<HTMLDivElement>(null)
+  const rateLabelRef = useRef<HTMLSpanElement>(null)
+  const todayElRef = useRef<HTMLSpanElement>(null)
+  const orderElRef = useRef<HTMLSpanElement>(null)
+  const avgElRef = useRef<HTMLSpanElement>(null)
+  const todayChgRef = useRef<HTMLSpanElement>(null)
+  const orderChgRef = useRef<HTMLSpanElement>(null)
+  const frozenBadgeRef = useRef<HTMLDivElement>(null)
+
+  useEffect(() => {
+    let revenue = BASE_REVENUE
+    let orders = BASE_ORDERS
+    let todayRev = BASE_TODAY
+    let lastTime = performance.now()
+    let animCurrent = BASE_REVENUE
+    let isCounterHovered = false
+    let frozenValue = 0
+    let particles: Particle[] = []
+    let particleRaf = 0
+    let animRaf = 0
+
+    const canvas = canvasRef.current
+    const counterCard = counterCardRef.current
+    const mainCounter = mainCounterRef.current
+    const rateLabel = rateLabelRef.current
+    const todayEl = todayElRef.current
+    const orderEl = orderElRef.current
+    const avgEl = avgElRef.current
+    const todayChg = todayChgRef.current
+    const orderChg = orderChgRef.current
+    const frozenBadge = frozenBadgeRef.current
+
+    const pCtx = canvas ? canvas.getContext('2d') : null
+
+    function resizeCanvas() {
+      if (!canvas || !counterCard) return
+      canvas.width = counterCard.offsetWidth
+      canvas.height = counterCard.offsetHeight
+    }
+
+    function burstParticles() {
+      if (!canvas) return
+      resizeCanvas()
+      const cx = canvas.width / 2
+      const cy = canvas.height * 0.42
+      for (let i = 0; i < 80; i++) particles.push(new Particle(cx, cy))
+    }
+
+    function loopParticles() {
+      if (!pCtx || !canvas) return
+      pCtx.clearRect(0, 0, canvas.width, canvas.height)
+      particles = particles.filter(p => p.alpha > 0)
+      particles.forEach(p => { p.update(); p.draw(pCtx) })
+      if (isCounterHovered && Math.random() < 0.35) {
+        const cx = canvas.width / 2 + (Math.random() - 0.5) * 160
+        const cy = canvas.height * 0.42
+        particles.push(new Particle(cx, cy))
+      }
+      particleRaf = requestAnimationFrame(loopParticles)
+    }
+
+    function animateCounter(ts: number) {
+      const dt = (ts - lastTime) / 1000
+      lastTime = ts
+
+      const earned = RATE_PER_SEC * dt
+      revenue += earned
+      todayRev += earned * 0.7
+
+      if (Math.random() < dt / 28) {
+        orders++
+        if (orderChg) orderChg.textContent = `▲ +${orders - BASE_ORDERS} วันนี้`
+      }
+
+      animCurrent += (revenue - animCurrent) * Math.min(dt * 6, 1)
+
+      if (!isCounterHovered) {
+        if (mainCounter) mainCounter.textContent = fmt(animCurrent)
+        if (rateLabel) rateLabel.textContent = `+฿${fmt(RATE_PER_SEC)} / วินาที`
+      }
+
+      if (todayEl) todayEl.textContent = `฿${fmt(todayRev)}`
+      if (orderEl) orderEl.textContent = fmt(orders)
+      if (avgEl) avgEl.textContent = `฿${fmt(revenue / orders)}`
+
+      const todayPct = ((todayRev / (BASE_TODAY * 0.88) - 1) * 100).toFixed(1)
+      if (todayChg) todayChg.textContent = `▲ +${todayPct}% vs เมื่อวาน`
+
+      animRaf = requestAnimationFrame(animateCounter)
+    }
+
+    animRaf = requestAnimationFrame(animateCounter)
+
+    if (counterCard) {
+      const mouseEnter = () => {
+        isCounterHovered = true
+        frozenValue = animCurrent
+        if (mainCounter) mainCounter.textContent = fmt(frozenValue)
+        if (rateLabel) rateLabel.textContent = '⏸ รายได้จริงขณะนี้ที่ ThaiSkill สร้าง'
+        counterCard.classList.add('paused')
+        if (frozenBadge) frozenBadge.classList.add('show')
+        burstParticles()
+        cancelAnimationFrame(particleRaf)
+        loopParticles()
+      }
+
+      const mouseLeave = () => {
+        isCounterHovered = false
+        counterCard.classList.remove('paused')
+        if (frozenBadge) frozenBadge.classList.remove('show')
+        cancelAnimationFrame(particleRaf)
+        if (pCtx && canvas) pCtx.clearRect(0, 0, canvas.width, canvas.height)
+        particles = []
+      }
+
+      counterCard.addEventListener('mouseenter', mouseEnter)
+      counterCard.addEventListener('mouseleave', mouseLeave)
+
+      return () => {
+        cancelAnimationFrame(animRaf)
+        cancelAnimationFrame(particleRaf)
+        counterCard.removeEventListener('mouseenter', mouseEnter)
+        counterCard.removeEventListener('mouseleave', mouseLeave)
+      }
+    }
+
+    return () => {
+      cancelAnimationFrame(animRaf)
+      cancelAnimationFrame(particleRaf)
+    }
+  }, [])
+
+  return (
+    <section className="hero" id="hero">
+      <div className="hero-inner">
+
+        <div className="eyebrow">
+          <span className="eyebrow-dot"></span>
+          ติดตามรายได้แบบ Real-Time
+        </div>
+
+        <h1 className="headline">
+          รู้ทุกบาท <strong>ทุกนาที</strong><br />ที่ ThaiSkill สร้าง
+        </h1>
+        <p className="subheadline">Dashboard รายได้แบบ real time สำหรับหน่วยธุรกิจ ThaiSkill</p>
+
+        {/* Revenue Counter */}
+        <div className="counter-card" id="counterCard" ref={counterCardRef}>
+          <canvas id="counterParticles" ref={canvasRef}></canvas>
+          <div className="frozen-badge" id="frozenBadge" ref={frozenBadgeRef}>
+            <span className="frozen-dot"></span>FROZEN
+          </div>
+          <div className="counter-label">รายได้สะสมปีนี้</div>
+          <div className="counter-main">
+            <span className="currency-symbol">฿</span>
+            <div className="counter-number" id="mainCounter" ref={mainCounterRef}>0</div>
+            <span className="counter-unit">บาท</span>
+          </div>
+          <div className="counter-sub">
+            <span className="live-badge">
+              <span className="live-badge-dot"></span>
+              LIVE
+            </span>
+            <span id="rateLabel" ref={rateLabelRef}>กำลังโหลด...</span>
+          </div>
+        </div>
+
+        {/* Stats Row */}
+        <div className="stats-row">
+          <div className="stat-item">
+            <span className="stat-value up" id="todayRevenue" ref={todayElRef}>฿0</span>
+            <span className="stat-label">รายได้วันนี้</span>
+            <span className="stat-change positive" id="todayChange" ref={todayChgRef}>▲ 0%</span>
+          </div>
+          <div className="stat-item">
+            <span className="stat-value" id="orderCount" ref={orderElRef}>0</span>
+            <span className="stat-label">ออเดอร์ทั้งหมด</span>
+            <span className="stat-change positive" id="orderChange" ref={orderChgRef}>▲ 0</span>
+          </div>
+          <div className="stat-item">
+            <span className="stat-value" id="avgOrder" ref={avgElRef}>฿0</span>
+            <span className="stat-label">มูลค่าเฉลี่ย/ออเดอร์</span>
+            <span className="stat-change positive">▲ 2.4%</span>
+          </div>
+        </div>
+
+        <div className="hero-actions">
+          <button className="btn-primary">ดูรายงานทั้งหมด</button>
+          <button className="btn-secondary">เชื่อมต่อข้อมูล</button>
+        </div>
+
+      </div>
+    </section>
+  )
+}
