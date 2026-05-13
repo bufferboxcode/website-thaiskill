@@ -51,6 +51,8 @@ function dbSetBar(id: string, value: number, max: number) {
   if (!el) return
   const pct = max > 0 ? Math.min(value / max * 100, 100) : 0
   el.style.width = pct.toFixed(2) + '%'
+  // Show "Success" overlay when bar hits 100%
+  el.classList.toggle('full', pct >= 100)
 }
 
 function dbCountUp(id: string, target: number, dec = 0) {
@@ -280,6 +282,7 @@ export default function Dashboard() {
                 <div className="mbar-fill" id="dbBarRevenue">
                   {B20.map((_, i) => <span key={i} className="mbill" />)}
                   <div className="mbar-shine" />
+                  <div className="mbar-success"><span>✓ SUCCESS</span></div>
                 </div>
                 <div className="mbar-edge-glow" />
               </div>
@@ -324,6 +327,7 @@ export default function Dashboard() {
                   <div className="mbar-fill green" id="dbBarCustomers">
                     {B12G.map((_, i) => <span key={i} className="mbill green" />)}
                     <div className="mbar-shine" />
+                    <div className="mbar-success"><span>✓ SUCCESS</span></div>
                   </div>
                 </div>
                 <div className="mbar-foot-row">
@@ -348,6 +352,7 @@ export default function Dashboard() {
                   <div className="mbar-fill" id="dbBarPeaIn">
                     {B12.map((_, i) => <span key={i} className="mbill sm" />)}
                     <div className="mbar-shine" />
+                    <div className="mbar-success"><span>✓ SUCCESS</span></div>
                   </div>
                 </div>
               </div>
@@ -366,6 +371,7 @@ export default function Dashboard() {
                   <div className="mbar-fill" id="dbBarPeaOut">
                     {B12.map((_, i) => <span key={i} className="mbill sm" />)}
                     <div className="mbar-shine" />
+                    <div className="mbar-success"><span>✓ SUCCESS</span></div>
                   </div>
                 </div>
               </div>
@@ -384,6 +390,7 @@ export default function Dashboard() {
                   <div className="mbar-fill" id="dbBarCarbonOut">
                     {B12.map((_, i) => <span key={i} className="mbill sm" />)}
                     <div className="mbar-shine" />
+                    <div className="mbar-success"><span>✓ SUCCESS</span></div>
                   </div>
                 </div>
               </div>
@@ -402,6 +409,7 @@ export default function Dashboard() {
                   <div className="mbar-fill" id="dbBarCarbonIn">
                     {B12.map((_, i) => <span key={i} className="mbill sm" />)}
                     <div className="mbar-shine" />
+                    <div className="mbar-success"><span>✓ SUCCESS</span></div>
                   </div>
                 </div>
               </div>
