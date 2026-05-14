@@ -3,120 +3,156 @@
 import { useEffect } from 'react'
 import Image from 'next/image'
 
-const COO = {
-  name: 'ชื่อ - นามสกุล',
-  role: 'Chief Operating Officer',
-  tags: ['Operations', 'Process'],
-  img: '/images/team3.png',
-}
+const EXECUTIVES = [
+  {
+    name: 'ผู้อำนวยการ',
+    role: 'School Director',
+    tags: ['Leadership', 'Vision'],
+    img: null,
+    badge: 'DIRECTOR',
+    placeholder: true,
+  },
+  {
+    name: 'ชื่อ - นามสกุล',
+    role: 'Chief Executive Officer',
+    tags: ['Strategy', 'Leadership'],
+    img: '/images/team1.jpg',
+    badge: 'CEO',
+  },
+  {
+    name: 'ชื่อ - นามสกุล',
+    role: 'Chief Technology Officer',
+    tags: ['AI', 'Innovation'],
+    img: '/images/team2.png',
+    badge: 'CTO',
+  },
+  {
+    name: 'ชื่อ - นามสกุล',
+    role: 'Chief Operating Officer',
+    tags: ['Operations', 'Process'],
+    img: '/images/team3.png',
+    badge: 'COO',
+  },
+]
 
-const MEMBERS = [
-  { name: 'ชื่อ - นามสกุล', role: 'Chief Executive Officer',  tags: ['Strategy', 'Leadership'],   img: '/images/team1.jpg' },
-  { name: 'ชื่อ - นามสกุล', role: 'Chief Technology Officer', tags: ['Technology', 'Innovation'],  img: '/images/team2.png' },
-  { name: 'ชื่อ - นามสกุล', role: 'Head of Business',         tags: ['Business Dev', 'Sales'],     img: '/images/team4.png' },
-  { name: 'ชื่อ - นามสกุล', role: 'Head of Product',          tags: ['Product', 'Design'],         img: '/images/team5.png' },
+const TEAM = [
+  {
+    name: 'ชื่อ - นามสกุล',
+    role: 'Head of Business',
+    tags: ['Business Dev', 'Sales'],
+    img: '/images/team4.png',
+    badge: 'BUSINESS',
+  },
+  {
+    name: 'ชื่อ - นามสกุล',
+    role: 'Head of Product',
+    tags: ['Product', 'UX Design'],
+    img: '/images/team5.png',
+    badge: 'PRODUCT',
+  },
 ]
 
 export default function Team() {
   useEffect(() => {
-    const els = document.querySelectorAll('.org-reveal')
+    const els = document.querySelectorAll('.tm-reveal')
     const obs = new IntersectionObserver(entries => {
       entries.forEach((entry, i) => {
         if (entry.isIntersecting) {
-          setTimeout(() => entry.target.classList.add('vis'), i * 100)
+          setTimeout(() => entry.target.classList.add('vis'), i * 90)
           obs.unobserve(entry.target)
         }
       })
-    }, { threshold: 0.1 })
+    }, { threshold: 0.08 })
     els.forEach(el => obs.observe(el))
     return () => obs.disconnect()
   }, [])
 
   return (
-    <section className="org-section" id="team">
+    <section className="tm-section" id="team">
 
-      {/* ── Header ── */}
-      <div className="org-header org-reveal">
-        <span className="org-eyebrow">
-          <span className="eyebrow-dot" />
-          โครงสร้างทีมงาน
-        </span>
-        <h2 className="org-title">คนที่ขับเคลื่อน <strong>Thai Skill</strong></h2>
-        <p className="org-sub">ทีมงานมืออาชีพพร้อมขับเคลื่อน ThaiSkill สู่อนาคต</p>
-      </div>
+      {/* ── Decorative background nodes ── */}
+      <div className="tm-bg-grid" aria-hidden="true" />
+      <div className="tm-orb tm-orb-1" aria-hidden="true" />
+      <div className="tm-orb tm-orb-2" aria-hidden="true" />
+      <div className="tm-orb tm-orb-3" aria-hidden="true" />
 
-      <div className="org-chart">
+      <div className="tm-inner">
 
-        {/* ══ Level 1 — ผู้อำนวยการโรงเรียน (placeholder) ══ */}
-        <div className="org-level org-reveal">
-          <div className="org-node director-node">
-            <span className="org-badge badge-director">
-              <svg viewBox="0 0 20 20" fill="currentColor" width="12" height="12">
-                <path d="M10.394 2.08a1 1 0 00-.788 0l-7 3a1 1 0 000 1.84L5.25 8.051a.999.999 0 01.356-.257l4-1.714a1 1 0 11.788 1.838L7.667 9.088l1.94.831a1 1 0 00.787 0l7-3a1 1 0 000-1.838l-7-3zM3.31 9.397L5 10.12v4.102a8.969 8.969 0 00-1.05-.174 1 1 0 01-.89-.89 11.115 11.115 0 01.25-3.762zM9.3 16.573A9.026 9.026 0 007 14.935v-3.957l1.818.78a3 3 0 002.364 0l5.508-2.361a11.026 11.026 0 01.25 3.762 1 1 0 01-.89.89 8.968 8.968 0 00-5.35 2.524 1 1 0 01-1.4 0z"/>
-              </svg>
-              ผู้อำนวยการโรงเรียน
-            </span>
-            <div className="director-avatar">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round" strokeLinejoin="round">
-                <circle cx="12" cy="8" r="4"/>
-                <path d="M4 20c0-4 3.6-7 8-7s8 3 8 7"/>
-              </svg>
-              <span className="director-hint">รอประกาศ</span>
+        {/* ── Header ── */}
+        <div className="tm-header tm-reveal">
+          <span className="tm-eyebrow">
+            <span className="tm-eyebrow-dot" />
+            TEAM · THAISKILL
+          </span>
+          <h2 className="tm-title">
+            ทีมที่ขับเคลื่อน<br />
+            <span className="tm-title-accent">อนาคตด้วย AI</span>
+          </h2>
+          <p className="tm-sub">
+            นักสร้างโลกเทคโนโลยีที่ผสานปัญญาประดิษฐ์เข้ากับการศึกษา
+          </p>
+        </div>
+
+        {/* ══ MANAGEMENT tier ══ */}
+        <div className="tm-tier-label tm-reveal">
+          <span className="tm-tier-line" />
+          <span className="tm-tier-text">LEADERSHIP &amp; MANAGEMENT</span>
+          <span className="tm-tier-line" />
+        </div>
+
+        <div className="tm-row tm-row-exec tm-reveal">
+          {EXECUTIVES.map((m, i) => (
+            <div key={i} className={`tm-card tm-card-exec${m.placeholder ? ' tm-card-placeholder' : ''}`}>
+              {/* Glow ring */}
+              <div className="tm-ring" />
+
+              {/* Badge */}
+              <span className="tm-badge">{m.badge}</span>
+
+              {/* Avatar */}
+              <div className="tm-avatar tm-avatar-lg">
+                {m.placeholder ? (
+                  <>
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1" strokeLinecap="round" strokeLinejoin="round">
+                      <circle cx="12" cy="8" r="4"/>
+                      <path d="M4 20c0-4 3.6-7 8-7s8 3 8 7"/>
+                    </svg>
+                    <span className="tm-placeholder-label">รอประกาศ</span>
+                  </>
+                ) : (
+                  <Image src={m.img!} alt={m.name} width={160} height={160} />
+                )}
+              </div>
+
+              {/* Info */}
+              <div className="tm-name">{m.name}</div>
+              <div className="tm-role">{m.role}</div>
+              <div className="tm-tags">
+                {m.tags.map(t => <span key={t} className="tm-tag">{t}</span>)}
+              </div>
             </div>
-            <div className="org-name">ผู้อำนวยการ</div>
-            <div className="org-role-text">School Director</div>
-          </div>
+          ))}
         </div>
 
-        {/* Connector: Director → COO */}
-        <div className="org-vline org-reveal">
-          <div className="org-vline-dot" />
-          <div className="org-vline-bar" />
-          <div className="org-vline-dot" />
+        {/* ══ TEAM tier ══ */}
+        <div className="tm-tier-label tm-reveal" style={{ marginTop: '64px' }}>
+          <span className="tm-tier-line" />
+          <span className="tm-tier-text">OUR TEAM</span>
+          <span className="tm-tier-line" />
         </div>
 
-        {/* ══ Level 2 — COO (หัวหน้าห้อง) ══ */}
-        <div className="org-level org-reveal">
-          <div className="org-node coo-node">
-            <span className="org-badge badge-coo">
-              <svg viewBox="0 0 20 20" fill="currentColor" width="12" height="12">
-                <path fillRule="evenodd" d="M10 9a3 3 0 100-6 3 3 0 000 6zm-7 9a7 7 0 1114 0H3z" clipRule="evenodd"/>
-              </svg>
-              หัวหน้าห้อง
-            </span>
-            <div className="coo-avatar">
-              <Image src={COO.img} alt={COO.name} width={110} height={110} />
-            </div>
-            <div className="org-name">{COO.name}</div>
-            <div className="org-role-text accent">{COO.role}</div>
-            <div className="org-tags-row">
-              {COO.tags.map(t => <span key={t} className="org-tag">{t}</span>)}
-            </div>
-          </div>
-        </div>
-
-        {/* Connector: COO → branch */}
-        <div className="org-vline org-reveal">
-          <div className="org-vline-dot" />
-          <div className="org-vline-bar" />
-        </div>
-        <div className="org-hline org-reveal" />
-
-        {/* ══ Level 3 — ทีมงาน ══ */}
-        <div className="org-members-row org-reveal">
-          {MEMBERS.map((m, i) => (
-            <div key={i} className="org-member-col">
-              <div className="org-dropline" />
-              <div className="org-node member-node">
-                <span className="org-badge badge-team">ทีมงาน</span>
-                <div className="member-avatar">
-                  <Image src={m.img} alt={m.name} width={80} height={80} />
-                </div>
-                <div className="org-name sm">{m.name}</div>
-                <div className="org-role-text sm">{m.role}</div>
-                <div className="org-tags-row">
-                  {m.tags.map(t => <span key={t} className="org-tag sm">{t}</span>)}
-                </div>
+        <div className="tm-row tm-row-team tm-reveal">
+          {TEAM.map((m, i) => (
+            <div key={i} className="tm-card tm-card-team">
+              <div className="tm-ring" />
+              <span className="tm-badge tm-badge-team">{m.badge}</span>
+              <div className="tm-avatar tm-avatar-md">
+                <Image src={m.img} alt={m.name} width={140} height={140} />
+              </div>
+              <div className="tm-name">{m.name}</div>
+              <div className="tm-role">{m.role}</div>
+              <div className="tm-tags">
+                {m.tags.map(t => <span key={t} className="tm-tag">{t}</span>)}
               </div>
             </div>
           ))}
