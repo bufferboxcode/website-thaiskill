@@ -2,15 +2,8 @@
 
 import { useState } from 'react'
 
-// ─── ใส่ Formspree Form ID ที่นี่ (ดูวิธีได้ด้านล่าง) ───────────
-// 1. สมัคร formspree.io → New Form → คัดลอก ID (ส่วน /f/xxxxxxxx)
-// 2. วางใส่ตัวแปรด้านล่าง แล้ว push ขึ้น Vercel
-const CONTACT_ID  = process.env.NEXT_PUBLIC_FORMSPREE_CONTACT  || ''
-const COMMENTS_ID = process.env.NEXT_PUBLIC_FORMSPREE_COMMENTS || ''
-
-function formspreeUrl(id: string) {
-  return `https://formspree.io/f/${id}`
-}
+const CONTACT_ID       = process.env.NEXT_PUBLIC_FORMSPREE_CONTACT || ''
+const GAS_COMMENTS_URL = process.env.NEXT_PUBLIC_GAS_COMMENTS_URL  || ''
 
 type Comment = { name: string; message: string; timestamp: string }
 
@@ -46,20 +39,21 @@ export default function Contact() {
     setSending(false)
   }
 
-  // ── ส่ง Comment ───────────────────────────────────────────────
+  // ── ส่ง Comment → Google Apps Script → Google Sheet ─────────
   async function submitComment(e: React.FormEvent) {
     e.preventDefault()
     setPosting(true)
     setCommentDone(null)
     try {
-      const r = await fetch(formspreeUrl(COMMENTS_ID), {
+      const r = await fetch(GAS_COMMENTS_URL, {
         method:  'POST',
-        headers: { Accept: 'application/json', 'Content-Type': 'application/json' },
+        headers: { 'Content-Type': 'application/json' },
         body:    JSON.stringify({ name: cmtName, message: cmtMsg }),
       })
-      setCommentDone(r.ok)
-      if (r.ok) {
-        // เพิ่มขึ้นหน้าจอทันที (local optimistic)
+      const json = await r.json().catch(() => ({ ok: false }))
+      const ok = r.ok && json.ok !== false
+      setCommentDone(ok)
+      if (ok) {
         const ts = new Date().toLocaleDateString('th-TH', { day: '2-digit', month: 'short', year: 'numeric' })
         setComments(prev => [{ name: cmtName, message: cmtMsg, timestamp: ts }, ...prev])
         setCmtName(''); setCmtMsg('')
@@ -166,7 +160,7 @@ export default function Contact() {
               {commentDone === true  && <p className="ct-feedback ct-ok">✓ โพสต์สำเร็จ!</p>}
               {commentDone === false && <p className="ct-feedback ct-err">✕ เกิดข้อผิดพลาด กรุณาลองใหม่</p>}
 
-              <button className="ct-btn" type="submit" disabled={posting || !COMMENTS_ID}>
+              <button className="ct-btn" type="submit" disabled={posting || !GAS_COMMENTS_URL}>
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
                   <line x1="22" y1="2" x2="11" y2="13"/>
                   <polygon points="22 2 15 22 11 13 2 9 22 2"/>
