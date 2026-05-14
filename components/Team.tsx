@@ -14,6 +14,16 @@ const EXECUTIVES = [
   },
   {
     name: 'ชื่อ - นามสกุล',
+    role: 'Chief Operating Officer',
+    tags: ['Operations', 'Process'],
+    img: '/images/team3.png',
+    badge: 'COO',
+  },
+]
+
+const TEAM = [
+  {
+    name: 'ชื่อ - นามสกุล',
     role: 'Chief Executive Officer',
     tags: ['Strategy', 'Leadership'],
     img: '/images/team1.jpg',
@@ -26,16 +36,6 @@ const EXECUTIVES = [
     img: '/images/team2.png',
     badge: 'CTO',
   },
-  {
-    name: 'ชื่อ - นามสกุล',
-    role: 'Chief Operating Officer',
-    tags: ['Operations', 'Process'],
-    img: '/images/team3.png',
-    badge: 'COO',
-  },
-]
-
-const TEAM = [
   {
     name: 'ชื่อ - นามสกุล',
     role: 'Head of Business',
