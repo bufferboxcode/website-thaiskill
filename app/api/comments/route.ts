@@ -1,6 +1,40 @@
 import { NextRequest, NextResponse } from 'next/server'
 
+// Published CSV URL of the Google Sheet — used for reading comments
+const SHEET_CSV_URL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vT7_pREWe1r1Lrou4aNsrqk0V7M1NbdZX2OTj54DPfgIBBEG1UlrAEnzu28yq-KsGAuL2Vp1HOmztVu/pub?output=csv'
+
+// GAS Web App URL — used for writing new comments (set in Vercel env vars)
 const GAS_URL = process.env.GAS_URL || ''
+
+function parseCommentCSV(csv: string) {
+  const lines = csv.trim().split(/\r?\n/)
+  if (lines.length < 2) return []
+  // Skip header row (Timestamp, Name, Message)
+  return lines
+    .slice(1)
+    .map(line => {
+      const parts = line.split(',')
+      const timestamp = parts[0]?.trim().replace(/^"|"$/g, '') || ''
+      const name      = parts[1]?.trim().replace(/^"|"$/g, '') || ''
+      const message   = parts.slice(2).join(',').trim().replace(/^"|"$/g, '') || ''
+      return { timestamp, name, message }
+    })
+    .filter(c => c.name && c.message)
+    .reverse()
+}
+
+export async function GET() {
+  try {
+    const res = await fetch(SHEET_CSV_URL + '&nocache=' + Date.now(), {
+      next: { revalidate: 30 },
+    })
+    if (!res.ok) return NextResponse.json([])
+    const csv = await res.text()
+    return NextResponse.json(parseCommentCSV(csv))
+  } catch {
+    return NextResponse.json([])
+  }
+}
 
 async function postToGAS(payload: object) {
   const body = JSON.stringify(payload)
@@ -21,17 +55,6 @@ async function postToGAS(payload: object) {
     }
   }
   return res
-}
-
-export async function GET() {
-  try {
-    if (!GAS_URL) return NextResponse.json([])
-    const res = await fetch(`${GAS_URL}?type=comments`, { next: { revalidate: 30 } })
-    if (!res.ok) throw new Error('GAS error')
-    return NextResponse.json(await res.json())
-  } catch {
-    return NextResponse.json([])
-  }
 }
 
 export async function POST(req: NextRequest) {
