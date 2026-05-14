@@ -1,97 +1,117 @@
 /**
  * ThaiSkill — Google Apps Script Web App
  * ========================================
- * ใช้กับ Google Sheet นี้:
- * https://docs.google.com/spreadsheets/d/e/2PACX-1vT7_pREWe1r1Lrou4aNsrqk0V7M1NbdZX2OTj54DPfgIBBEG1UlrAEnzu28yq-KsGAuL2Vp1HOmztVu/pub?output=csv
+ * ติดตั้งบน Google Sheet ที่มี tab gid=2127867965:
+ * https://docs.google.com/spreadsheets/d/e/2PACX-1vQ6P9WqCiP8Nq5p_TBvXF2VmG9VpTzwj2Sx_CmPmjRZ12EFuTRbqP5yWz_Nk0H10P8EnmAjet9rwmNF/pub?gid=2127867965&single=true&output=csv
  *
  * วิธีติดตั้ง:
- * 1. เปิด Google Sheet ข้างต้น (ต้องเป็นเจ้าของหรือมีสิทธิ์แก้ไข)
- * 2. ไปที่ Extensions → Apps Script
- * 3. วางโค้ดนี้ทั้งหมด → กด Save (Ctrl+S)
- * 4. กด Deploy → New deployment
- *      - Type         : Web app
- *      - Execute as   : Me
- *      - Who has access: Anyone
- * 5. กด Deploy → คัดลอก Web app URL ที่ได้
- * 6. ไปที่ Vercel → Settings → Environment Variables → เพิ่ม:
- *      Name : GAS_URL
- *      Value: <URL ที่ได้จากข้อ 5>
- * 7. Redeploy Vercel (หรือรอ deploy อัตโนมัติ)
+ * 1. เปิด Google Sheet นั้น (ต้องเป็นเจ้าของหรือมีสิทธิ์แก้ไข)
+ * 2. Extensions → Apps Script
+ * 3. วางโค้ดนี้ทั้งหมด → Ctrl+S (Save)
+ * 4. Deploy → New deployment
+ *      Type          : Web app
+ *      Execute as    : Me
+ *      Who has access: Anyone
+ * 5. คัดลอก Web app URL
+ * 6. Vercel → Settings → Environment Variables → เพิ่ม:
+ *      GAS_URL = <URL จากข้อ 5>
+ * 7. Redeploy Vercel
  *
- * Sheet structure (สร้างอัตโนมัติ):
- *   Sheet1 (tab แรก)   → Comments     : Timestamp | Name | Message
- *   "ContactMessages"  → Contact form : Timestamp | Name | PEA Email | Message
- *
- * หมายเหตุ: ระบบอ่าน Comments จาก CSV URL ของ Sheet1 (tab แรก) โดยอัตโนมัติ
+ * Sheet ที่ script จะใช้:
+ *   gid=2127867965  → รับข้อมูล Contact form  (Name, PEA Email, Message)
+ *   "Comments" tab  → รับข้อมูล Comments      (Name, Message)
  */
 
+var CONTACT_GID = 2127867965   // gid ของ tab รับ contact form
+
+// ──────────────────────────────────────────────────────────
+// POST: รับข้อมูลจากเว็บไซต์ → เขียนลง Sheet
+// ──────────────────────────────────────────────────────────
 function doPost(e) {
   try {
-    const ss   = SpreadsheetApp.getActiveSpreadsheet()
-    const data = JSON.parse(e.postData.contents)
-    const now  = new Date()
+    var ss   = SpreadsheetApp.getActiveSpreadsheet()
+    var data = JSON.parse(e.postData.contents)
+    var now  = new Date()
 
-    if (data.type === 'comment') {
-      // เขียนลง Sheet แรก (tab แรก) — ตรงกับ CSV URL ที่ระบบอ่าน
-      const sheet = ss.getSheets()[0]
-      if (sheet.getLastRow() === 0) {
-        sheet.appendRow(['Timestamp', 'Name', 'Message'])
-        sheet.getRange(1, 1, 1, 3).setFontWeight('bold')
-      }
-      sheet.appendRow([now, data.name, data.message])
-
-    } else if (data.type === 'contact') {
-      // เขียนลง tab "ContactMessages" (สร้างใหม่ถ้ายังไม่มี)
-      let sheet = ss.getSheetByName('ContactMessages')
-      if (!sheet) {
-        sheet = ss.insertSheet('ContactMessages')
-        sheet.appendRow(['Timestamp', 'Name', 'PEA Email', 'Message'])
-        sheet.getRange(1, 1, 1, 4).setFontWeight('bold')
-      }
+    if (data.type === 'contact') {
+      var sheet = getSheetByGid(ss, CONTACT_GID)
+      ensureContactHeader(sheet)
       sheet.appendRow([now, data.name, data.email, data.message])
+
+    } else if (data.type === 'comment') {
+      var cSheet = ss.getSheetByName('Comments')
+      if (!cSheet) {
+        cSheet = ss.insertSheet('Comments')
+        cSheet.appendRow(['Timestamp', 'Name', 'Message'])
+        cSheet.getRange(1, 1, 1, 3).setFontWeight('bold')
+      }
+      cSheet.appendRow([now, data.name, data.message])
     }
 
-    return ContentService
-      .createTextOutput(JSON.stringify({ success: true }))
-      .setMimeType(ContentService.MimeType.JSON)
-
+    return ok()
   } catch (err) {
-    return ContentService
-      .createTextOutput(JSON.stringify({ success: false, error: err.toString() }))
-      .setMimeType(ContentService.MimeType.JSON)
+    return fail(err)
   }
 }
 
+// ──────────────────────────────────────────────────────────
+// GET: ส่ง Comments กลับเป็น JSON (ใช้โดย /api/comments)
+// ──────────────────────────────────────────────────────────
 function doGet(e) {
   try {
-    const ss    = SpreadsheetApp.getActiveSpreadsheet()
-    const sheet = ss.getSheets()[0]   // Sheet แรก = Comments
+    var ss    = SpreadsheetApp.getActiveSpreadsheet()
+    var sheet = ss.getSheetByName('Comments')
 
     if (!sheet || sheet.getLastRow() < 2) {
-      return ContentService
-        .createTextOutput(JSON.stringify([]))
-        .setMimeType(ContentService.MimeType.JSON)
+      return json([])
     }
 
-    const rows     = sheet.getRange(2, 1, sheet.getLastRow() - 1, 3).getValues()
-    const comments = rows
-      .filter(row => row[1] && row[2])
-      .map(row => ({
-        timestamp: row[0]
-          ? Utilities.formatDate(new Date(row[0]), 'Asia/Bangkok', 'dd MMM yyyy')
-          : '',
-        name   : String(row[1]),
-        message: String(row[2]),
-      }))
+    var rows = sheet.getRange(2, 1, sheet.getLastRow() - 1, 3).getValues()
+    var comments = rows
+      .filter(function(r) { return r[1] && r[2] })
+      .map(function(r) {
+        return {
+          timestamp: r[0] ? Utilities.formatDate(new Date(r[0]), 'Asia/Bangkok', 'dd MMM yyyy') : '',
+          name     : String(r[1]),
+          message  : String(r[2]),
+        }
+      })
       .reverse()
 
-    return ContentService
-      .createTextOutput(JSON.stringify(comments))
-      .setMimeType(ContentService.MimeType.JSON)
-
+    return json(comments)
   } catch (err) {
-    return ContentService
-      .createTextOutput(JSON.stringify({ error: err.toString() }))
-      .setMimeType(ContentService.MimeType.JSON)
+    return fail(err)
   }
+}
+
+// ──────────────────────────────────────────────────────────
+// Helpers
+// ──────────────────────────────────────────────────────────
+
+/** หา Sheet ด้วย gid; ถ้าไม่เจอให้สร้าง tab ใหม่ */
+function getSheetByGid(ss, gid) {
+  var sheets = ss.getSheets()
+  for (var i = 0; i < sheets.length; i++) {
+    if (sheets[i].getSheetId() === gid) return sheets[i]
+  }
+  // ไม่เจอ gid → สร้าง tab ใหม่ชื่อ ContactMessages
+  var newSheet = ss.insertSheet('ContactMessages')
+  newSheet.getRange(1, 1, 1, 4).setFontWeight('bold')
+  return newSheet
+}
+
+/** ตรวจและเพิ่ม header ถ้า sheet ยังว่างอยู่ */
+function ensureContactHeader(sheet) {
+  if (sheet.getLastRow() === 0) {
+    sheet.appendRow(['Timestamp', 'Name', 'PEA Email', 'Message'])
+    sheet.getRange(1, 1, 1, 4).setFontWeight('bold')
+  }
+}
+
+function ok()       { return json({ success: true }) }
+function fail(err)  { return json({ success: false, error: String(err) }) }
+function json(data) {
+  return ContentService
+    .createTextOutput(JSON.stringify(data))
+    .setMimeType(ContentService.MimeType.JSON)
 }
