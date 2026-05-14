@@ -5,6 +5,7 @@ import About from '@/components/About'
 import Services from '@/components/Services'
 import Team from '@/components/Team'
 import Ticker from '@/components/Ticker'
+import Contact from '@/components/Contact'
 
 export default function Home() {
   return (
@@ -16,6 +17,7 @@ export default function Home() {
       <Services />
       <Team />
       <Ticker />
+      <Contact />
     </>
   )
 }
