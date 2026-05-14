@@ -177,8 +177,11 @@ function dbSetStatus(state: string) {
 async function dbFetch() {
   try {
     dbSetStatus('loading')
-    const url = SHEETS_CSV_URL + '&nocache=' + Date.now()
-    const res = await fetch(url)
+    const url = SHEETS_CSV_URL + '&t=' + Date.now()
+    const res = await fetch(url, {
+      cache: 'no-store',
+      headers: { 'Cache-Control': 'no-cache, no-store', Pragma: 'no-cache' },
+    })
     if (!res.ok) throw new Error('HTTP ' + res.status)
     const csv = await res.text()
     const data = parseCSV(csv)
@@ -190,7 +193,7 @@ async function dbFetch() {
     const notice = document.getElementById('dbSetupNotice')
     if (notice) (notice as HTMLElement).style.display = 'none'
   } catch (err) {
-    console.warn('[Dashboard] Google Sheets fetch failed:', err)
+    console.warn('[Dashboard] fetch failed:', err)
     dbSetStatus('error')
     dbRender(DB_DEFAULT)
   }

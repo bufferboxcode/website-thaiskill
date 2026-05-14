@@ -93,38 +93,45 @@ export default function Hero() {
 
     // Fetch live base value — same CSV + parsing logic as Dashboard
     function fetchBase() {
-      fetch(SHEETS_CSV_URL + '&nocache=' + Date.now())
+      fetch(SHEETS_CSV_URL + '&t=' + Date.now(), {
+        cache: 'no-store',
+        headers: { 'Cache-Control': 'no-cache, no-store', Pragma: 'no-cache' },
+      })
         .then(r => r.text())
         .then(csv => {
+          let found = false
           csv.trim().split(/\r?\n/).forEach(line => {
             const parts = line.split(',')
             if (parts.length < 2) return
             const key = parts[0].trim().replace(/^"|"$/g, '')
             if (key !== 'revenue_current') return
-            // join remaining parts (currency values contain commas)
             const raw = parts.slice(1).join(',').trim().replace(/^"|"$/g, '')
             const cleaned = raw.replace(/[฿$€£\s,]/g, '')
             const n = parseFloat(cleaned)
             if (!isNaN(n) && n > 0) {
               baseRevenue = n
-              animCurrent = n
+              if (!loaded) animCurrent = n   // only snap on first load
               loaded = true
+              found = true
             }
           })
-          // if key wasn't found, use fallback
-          if (!loaded) {
+          if (!found && !loaded) {
             baseRevenue = 6_151_200
             animCurrent = baseRevenue
             loaded = true
           }
         })
         .catch(() => {
-          baseRevenue = 6_151_200
-          animCurrent = baseRevenue
-          loaded = true
+          if (!loaded) {
+            baseRevenue = 6_151_200
+            animCurrent = baseRevenue
+            loaded = true
+          }
         })
     }
     fetchBase()
+    // Refresh every 5 minutes so counter base stays current
+    const heroRefreshInterval = setInterval(fetchBase, 5 * 60 * 1000)
 
     const canvas = canvasRef.current
     const counterCard = counterCardRef.current
@@ -241,6 +248,7 @@ export default function Hero() {
     return () => {
       cancelAnimationFrame(animRaf)
       cancelAnimationFrame(particleRaf)
+      clearInterval(heroRefreshInterval)
     }
   }, [])
 
