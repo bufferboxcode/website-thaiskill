@@ -16,10 +16,7 @@ export const db = getFirestore(app)
 
 // ── Debug: log config ใน browser console เพื่อตรวจสอบ env vars ──
 if (typeof window !== 'undefined') {
-  console.log('[firebase] config:', {
-    projectId:         firebaseConfig.projectId,
-    authDomain:        firebaseConfig.authDomain,
-    apiKey:            firebaseConfig.apiKey ? '✓ set' : '✗ MISSING',
-    appId:             firebaseConfig.appId   ? '✓ set' : '✗ MISSING',
-  })
+  console.warn('🔥 [firebase] projectId :', firebaseConfig.projectId  ?? '⚠️ UNDEFINED')
+  console.warn('🔥 [firebase] apiKey    :', firebaseConfig.apiKey     ? '✓ set' : '⚠️ MISSING')
+  console.warn('🔥 [firebase] appId     :', firebaseConfig.appId      ? '✓ set' : '⚠️ MISSING')
 }
