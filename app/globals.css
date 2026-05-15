@@ -2873,6 +2873,20 @@ html, body {
   border-radius: 20px;
   margin-left: 2px;
 }
+/* Firebase real-time indicator dot */
+.ct-live-dot {
+  width: 8px; height: 8px;
+  border-radius: 50%;
+  background: #22c55e;
+  box-shadow: 0 0 6px #22c55e;
+  animation: ctLivePulse 2s ease-in-out infinite;
+  margin-left: auto;
+  flex-shrink: 0;
+}
+@keyframes ctLivePulse {
+  0%, 100% { opacity: 1; box-shadow: 0 0 6px #22c55e; }
+  50%       { opacity: 0.4; box-shadow: 0 0 2px #22c55e; }
+}
 
 /* ── Comment form ── */
 .ct-cmt-form {

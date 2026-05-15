@@ -1,67 +1,113 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
+import {
+  collection, addDoc, query, orderBy, limit,
+  onSnapshot, serverTimestamp, Timestamp,
+} from 'firebase/firestore'
+import { db } from '@/lib/firebase'
 
-const CONTACT_ID       = process.env.NEXT_PUBLIC_FORMSPREE_CONTACT || ''
-const GAS_COMMENTS_URL = process.env.NEXT_PUBLIC_GAS_COMMENTS_URL  || ''
+// ──────────────────────────────────────────────────────────────
+// Collections
+// ──────────────────────────────────────────────────────────────
+const CONTACTS_COL  = 'thaiskill_contacts'   // contact form submissions
+const COMMENTS_COL  = 'thaiskill_comments'   // public comments
 
-type Comment = { name: string; message: string; timestamp: string }
+const isReady = !!process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID
 
+type Comment = { id: string; name: string; message: string; timestamp: string }
+
+function toThaiDate(ts: unknown): string {
+  const d = ts instanceof Timestamp ? ts.toDate() : new Date()
+  return d.toLocaleDateString('th-TH', { day: '2-digit', month: 'short', year: 'numeric' })
+}
+
+// ──────────────────────────────────────────────────────────────
 export default function Contact() {
-  // Contact form state
-  const [cName,  setCName]  = useState('')
-  const [cEmail, setCEmail] = useState('')
-  const [cMsg,   setCMsg]   = useState('')
+
+  // ── Contact form state ────────────────────────────────────────
+  const [cName,       setCName]       = useState('')
+  const [cEmail,      setCEmail]      = useState('')
+  const [cMsg,        setCMsg]        = useState('')
   const [sending,     setSending]     = useState(false)
   const [contactDone, setContactDone] = useState<boolean | null>(null)
 
-  // Comments state (local — shows submitted comments immediately)
-  const [cmtName, setCmtName] = useState('')
-  const [cmtMsg,  setCmtMsg]  = useState('')
+  // ── Comments state ────────────────────────────────────────────
+  const [cmtName,     setCmtName]     = useState('')
+  const [cmtMsg,      setCmtMsg]      = useState('')
   const [comments,    setComments]    = useState<Comment[]>([])
   const [posting,     setPosting]     = useState(false)
   const [commentDone, setCommentDone] = useState<boolean | null>(null)
 
-  // ── ส่ง Contact form ──────────────────────────────────────────
+  // ── Real-time comment listener ────────────────────────────────
+  useEffect(() => {
+    if (!isReady) return
+
+    const q = query(
+      collection(db, COMMENTS_COL),
+      orderBy('createdAt', 'desc'),
+      limit(50),
+    )
+
+    const unsub = onSnapshot(q, snapshot => {
+      setComments(
+        snapshot.docs.map(doc => {
+          const d = doc.data()
+          return {
+            id:        doc.id,
+            name:      d.name      ?? 'Anonymous',
+            message:   d.message   ?? '',
+            timestamp: toThaiDate(d.createdAt),
+          }
+        }),
+      )
+    })
+
+    return () => unsub()
+  }, [])
+
+  // ── Submit contact form → Firestore ───────────────────────────
   async function submitContact(e: React.FormEvent) {
     e.preventDefault()
     setSending(true)
     setContactDone(null)
     try {
-      const r = await fetch(`https://formspree.io/f/${CONTACT_ID}`, {
-        method:  'POST',
-        headers: { Accept: 'application/json', 'Content-Type': 'application/json' },
-        body:    JSON.stringify({ name: cName, email: cEmail, message: cMsg }),
+      await addDoc(collection(db, CONTACTS_COL), {
+        name:      cName,
+        email:     cEmail,
+        message:   cMsg,
+        createdAt: serverTimestamp(),
       })
-      setContactDone(r.ok)
-      if (r.ok) { setCName(''); setCEmail(''); setCMsg('') }
-    } catch { setContactDone(false) }
+      setContactDone(true)
+      setCName(''); setCEmail(''); setCMsg('')
+    } catch (err) {
+      console.error('[contact]', err)
+      setContactDone(false)
+    }
     setSending(false)
   }
 
-  // ── ส่ง Comment → Google Apps Script → Google Sheet ─────────
+  // ── Submit comment → Firestore (real-time via onSnapshot) ────
   async function submitComment(e: React.FormEvent) {
     e.preventDefault()
     setPosting(true)
     setCommentDone(null)
     try {
-      const r = await fetch(GAS_COMMENTS_URL, {
-        method:  'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body:    JSON.stringify({ name: cmtName, message: cmtMsg }),
+      await addDoc(collection(db, COMMENTS_COL), {
+        name:      cmtName,
+        message:   cmtMsg,
+        createdAt: serverTimestamp(),
       })
-      const json = await r.json().catch(() => ({ ok: false }))
-      const ok = r.ok && json.ok !== false
-      setCommentDone(ok)
-      if (ok) {
-        const ts = new Date().toLocaleDateString('th-TH', { day: '2-digit', month: 'short', year: 'numeric' })
-        setComments(prev => [{ name: cmtName, message: cmtMsg, timestamp: ts }, ...prev])
-        setCmtName(''); setCmtMsg('')
-      }
-    } catch { setCommentDone(false) }
+      setCommentDone(true)
+      setCmtName(''); setCmtMsg('')
+    } catch (err) {
+      console.error('[comment]', err)
+      setCommentDone(false)
+    }
     setPosting(false)
   }
 
+  // ── JSX ───────────────────────────────────────────────────────
   return (
     <section className="ct-section" id="contact">
       <div className="ct-inner">
@@ -86,6 +132,12 @@ export default function Contact() {
               </button>
             </div>
             <p className="ct-card-sub">Have something to discuss? Send us a message and let&apos;s talk.</p>
+
+            {!isReady && (
+              <p className="ct-feedback ct-err" style={{ marginBottom: 16 }}>
+                ⚠️ Firebase ยังไม่ได้ตั้งค่า — กรุณาเพิ่ม NEXT_PUBLIC_FIREBASE_* ใน Vercel
+              </p>
+            )}
 
             <form className="ct-form" onSubmit={submitContact}>
               <div className="ct-field">
@@ -120,10 +172,10 @@ export default function Contact() {
                   value={cMsg} onChange={e => setCMsg(e.target.value)} required />
               </div>
 
-              {contactDone === true  && <p className="ct-feedback ct-ok">✓ ส่งข้อความสำเร็จแล้ว! เราจะติดต่อกลับเร็วๆ นี้</p>}
+              {contactDone === true  && <p className="ct-feedback ct-ok">✓ ส่งข้อความสำเร็จ! เราจะติดต่อกลับเร็วๆ นี้</p>}
               {contactDone === false && <p className="ct-feedback ct-err">✕ เกิดข้อผิดพลาด กรุณาลองใหม่อีกครั้ง</p>}
 
-              <button className="ct-btn" type="submit" disabled={sending || !CONTACT_ID}>
+              <button className="ct-btn" type="submit" disabled={sending || !isReady}>
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
                   <line x1="22" y1="2" x2="11" y2="13"/>
                   <polygon points="22 2 15 22 11 13 2 9 22 2"/>
@@ -133,7 +185,7 @@ export default function Contact() {
             </form>
           </div>
 
-          {/* ── Right: Comments ── */}
+          {/* ── Right: Comments (real-time) ── */}
           <div className="ct-card">
             <div className="ct-cmt-header">
               <span className="ct-cmt-icon">
@@ -143,6 +195,9 @@ export default function Contact() {
               </span>
               <h3 className="ct-cmt-title">Comments</h3>
               <span className="ct-cmt-count">{comments.length}</span>
+              {isReady && (
+                <span className="ct-live-dot" title="Real-time" />
+              )}
             </div>
 
             <form className="ct-cmt-form" onSubmit={submitComment}>
@@ -160,7 +215,7 @@ export default function Contact() {
               {commentDone === true  && <p className="ct-feedback ct-ok">✓ โพสต์สำเร็จ!</p>}
               {commentDone === false && <p className="ct-feedback ct-err">✕ เกิดข้อผิดพลาด กรุณาลองใหม่</p>}
 
-              <button className="ct-btn" type="submit" disabled={posting || !GAS_COMMENTS_URL}>
+              <button className="ct-btn" type="submit" disabled={posting || !isReady}>
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
                   <line x1="22" y1="2" x2="11" y2="13"/>
                   <polygon points="22 2 15 22 11 13 2 9 22 2"/>
@@ -170,11 +225,14 @@ export default function Contact() {
             </form>
 
             <div className="ct-cmt-list">
-              {comments.length === 0 && (
+              {!isReady && (
+                <p className="ct-cmt-empty">⚠️ Firebase ยังไม่ได้ตั้งค่า</p>
+              )}
+              {isReady && comments.length === 0 && (
                 <p className="ct-cmt-empty">ยังไม่มีความคิดเห็น เป็นคนแรกที่แสดงความคิดเห็น!</p>
               )}
-              {comments.map((c, i) => (
-                <div key={i} className="ct-cmt-item">
+              {comments.map(c => (
+                <div key={c.id} className="ct-cmt-item">
                   <div className="ct-cmt-avatar">{(c.name || '?')[0].toUpperCase()}</div>
                   <div className="ct-cmt-body">
                     <div className="ct-cmt-meta">
@@ -186,6 +244,7 @@ export default function Contact() {
                 </div>
               ))}
             </div>
+
           </div>
 
         </div>
