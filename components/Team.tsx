@@ -157,7 +157,7 @@ export default function Team() {
               <div className="tm-ring" />
               <span className="tm-badge tm-badge-team">{m.badge}</span>
               <div className="tm-avatar tm-avatar-md">
-                <Image src={m.img} alt={m.name} width={140} height={140} />
+                <Image src={m.img!} alt={m.name} width={280} height={280} />
               </div>
               <div className="tm-name">{m.name}</div>
               <div className="tm-role">{m.role}</div>
