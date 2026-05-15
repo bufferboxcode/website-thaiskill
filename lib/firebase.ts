@@ -13,3 +13,13 @@ const firebaseConfig = {
 // Prevent re-initializing on hot-reload
 const app = getApps().length === 0 ? initializeApp(firebaseConfig) : getApp()
 export const db = getFirestore(app)
+
+// ── Debug: log config ใน browser console เพื่อตรวจสอบ env vars ──
+if (typeof window !== 'undefined') {
+  console.log('[firebase] config:', {
+    projectId:         firebaseConfig.projectId,
+    authDomain:        firebaseConfig.authDomain,
+    apiKey:            firebaseConfig.apiKey ? '✓ set' : '✗ MISSING',
+    appId:             firebaseConfig.appId   ? '✓ set' : '✗ MISSING',
+  })
+}
