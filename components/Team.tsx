@@ -118,15 +118,15 @@ export default function Team() {
 
         <div className="tm-row tm-row-exec tm-reveal">
           {EXECUTIVES.map((m, i) => (
-            <div key={i} className="tm-card tm-card-exec">
+            <div key={i} className={`tm-card tm-card-exec${i === 0 ? ' tm-card-bu-head' : ''}`}>
               {/* Glow ring */}
-              <div className="tm-ring" />
+              <div className={`tm-ring${i === 0 ? ' tm-ring-bu-head' : ''}`} />
 
               {/* Badge */}
-              <span className="tm-badge">{m.badge}</span>
+              <span className={`tm-badge${i === 0 ? ' tm-badge-bu-head' : ''}`}>{m.badge}</span>
 
               {/* Avatar */}
-              <div className="tm-avatar tm-avatar-lg">
+              <div className={`tm-avatar tm-avatar-lg${i === 0 ? ' tm-avatar-bu-head' : ''}`}>
                 <Image src={m.img!} alt={m.name} width={160} height={160} />
               </div>
 

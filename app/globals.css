@@ -904,6 +904,107 @@ html, body {
     0 24px 64px rgba(0,0,0,0.6);
 }
 
+/* ══ THAISKILL BU HEAD — Purple × Gold futuristic leader card ══ */
+.tm-card-bu-head {
+  background: linear-gradient(
+    160deg,
+    rgba(30, 0, 60, 0.95)  0%,
+    rgba(20, 6, 45, 0.92)  40%,
+    rgba(45, 20, 0, 0.90)  100%
+  );
+  box-shadow:
+    0 0 0 1.5px transparent,
+    0 20px 60px rgba(0,0,0,0.65),
+    0 0 80px rgba(147,51,234,0.15) inset,
+    0 0 40px rgba(245,158,11,0.08) inset;
+}
+
+/* Animated purple-gold spinning border */
+.tm-card-bu-head::before {
+  background: conic-gradient(
+    from 0deg,
+    #9333ea   0deg,
+    #c084fc  60deg,
+    #fbbf24 120deg,
+    #f59e0b 150deg,
+    #fbbf24 180deg,
+    #a855f7 240deg,
+    #7c3aed 300deg,
+    #d97706 330deg,
+    #9333ea 360deg
+  ) !important;
+  animation: buHeadBorder 3s linear infinite;
+  opacity: 1 !important;
+}
+@keyframes buHeadBorder {
+  from { transform: rotate(0deg); }
+  to   { transform: rotate(360deg); }
+}
+
+.tm-card-bu-head:hover {
+  box-shadow:
+    0 0 0 1.5px transparent,
+    0 28px 72px rgba(0,0,0,0.7),
+    0 0 100px rgba(147,51,234,0.25) inset,
+    0 0 60px rgba(245,158,11,0.15) inset;
+}
+
+/* Purple-gold glow ring behind card */
+.tm-ring-bu-head {
+  background: radial-gradient(
+    circle,
+    rgba(147,51,234,0.22) 0%,
+    rgba(245,158,11,0.10) 45%,
+    transparent 70%
+  ) !important;
+  width: 420px; height: 420px;
+  animation: buHeadRingPulse 3s ease-in-out infinite;
+}
+@keyframes buHeadRingPulse {
+  0%, 100% { opacity: 0.8; transform: translateX(-50%) scale(1);   }
+  50%       { opacity: 1;   transform: translateX(-50%) scale(1.08); }
+}
+
+/* Purple-gold spinning avatar ring */
+.tm-avatar-bu-head::after {
+  background: conic-gradient(
+    from 0deg,
+    #9333ea   0deg,
+    #c084fc  70deg,
+    #fbbf24 130deg,
+    #f59e0b 180deg,
+    #fbbf24 220deg,
+    #a855f7 280deg,
+    #9333ea 360deg
+  ) !important;
+  inset: -4px !important;
+  animation: buHeadAvatarSpin 4s linear infinite !important;
+}
+@keyframes buHeadAvatarSpin {
+  from { transform: rotate(0deg); }
+  to   { transform: rotate(360deg); }
+}
+
+.tm-avatar-bu-head {
+  box-shadow:
+    0 0 40px rgba(147,51,234,0.45),
+    0 0 20px rgba(245,158,11,0.25),
+    0 12px 48px rgba(0,0,0,0.7) !important;
+}
+
+/* Purple-gold badge */
+.tm-badge-bu-head {
+  color: #fbbf24 !important;
+  background: linear-gradient(90deg, rgba(147,51,234,0.18), rgba(245,158,11,0.15)) !important;
+  border-color: rgba(245,158,11,0.5) !important;
+  box-shadow: 0 0 12px rgba(245,158,11,0.2), 0 0 6px rgba(147,51,234,0.2) !important;
+  animation: buHeadBadgeGlow 2.5s ease-in-out infinite;
+}
+@keyframes buHeadBadgeGlow {
+  0%, 100% { box-shadow: 0 0 12px rgba(245,158,11,0.2), 0 0 6px rgba(147,51,234,0.2); }
+  50%       { box-shadow: 0 0 20px rgba(245,158,11,0.4), 0 0 12px rgba(147,51,234,0.3); }
+}
+
 /* ── Team card ── */
 .tm-card-team {
   background: linear-gradient(160deg, rgba(5,15,38,0.88) 0%, rgba(8,22,55,0.82) 100%);
