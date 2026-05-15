@@ -8,9 +8,10 @@ import {
 import { db } from '@/lib/firebase'
 
 // ──────────────────────────────────────────────────────────────
-// Collections
+// Collections — both use thaiskill_comments (already has allow create: if true)
+// Contact submissions are tagged type:'contact' and filtered out of display
 // ──────────────────────────────────────────────────────────────
-const CONTACTS_COL  = 'thaiskill_contacts'   // contact form submissions
+const CONTACTS_COL  = 'thaiskill_comments'   // tagged type:'contact'
 const COMMENTS_COL  = 'thaiskill_comments'   // public comments
 
 const isReady = !!process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID
@@ -51,15 +52,17 @@ export default function Contact() {
 
     const unsub = onSnapshot(q, snapshot => {
       setComments(
-        snapshot.docs.map(doc => {
-          const d = doc.data()
-          return {
-            id:        doc.id,
-            name:      d.name      ?? 'Anonymous',
-            message:   d.message   ?? '',
-            timestamp: toThaiDate(d.createdAt),
-          }
-        }),
+        snapshot.docs
+          .filter(doc => doc.data().type !== 'contact')   // ← ซ่อน contact submissions
+          .map(doc => {
+            const d = doc.data()
+            return {
+              id:        doc.id,
+              name:      d.name      ?? 'Anonymous',
+              message:   d.message   ?? '',
+              timestamp: toThaiDate(d.createdAt),
+            }
+          }),
       )
     })
 
@@ -75,6 +78,7 @@ export default function Contact() {
       // Race against 10-second timeout so button never hangs forever
       await Promise.race([
         addDoc(collection(db, CONTACTS_COL), {
+          type:      'contact',          // ← tag ให้รู้ว่าเป็น contact ไม่ใช่ comment
           name:      cName,
           email:     cEmail,
           message:   cMsg,
