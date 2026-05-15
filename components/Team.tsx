@@ -14,50 +14,56 @@ type Member = {
 
 const EXECUTIVES: Member[] = [
   {
-    name: 'ผู้อำนวยการ',
-    role: 'School Director',
+    name: 'ชื่อ - นามสกุล',
+    role: 'ThaiSkill BU Head',
     tags: ['Leadership', 'Vision'],
-    img: null,
-    badge: 'DIRECTOR',
-    placeholder: true,
+    img: '/images/bu-head.png',
+    badge: 'THAISKILL BU HEAD',
   },
   {
     name: 'ชื่อ - นามสกุล',
-    role: 'Chief Operating Officer',
-    tags: ['Operations', 'Process'],
-    img: '/images/team3.png',
-    badge: 'COO',
+    role: 'BD Lead',
+    tags: ['Business Dev', 'Sales'],
+    img: '/images/bd-lead.png',
+    badge: 'BD LEAD',
   },
 ]
 
 const TEAM: Member[] = [
   {
     name: 'ชื่อ - นามสกุล',
-    role: 'Chief Executive Officer',
-    tags: ['Strategy', 'Leadership'],
-    img: '/images/team1.jpg',
-    badge: 'CEO',
+    role: 'Team Member',
+    tags: ['ThaiSkill'],
+    img: '/images/member1.png',
+    badge: 'TEAM',
   },
   {
     name: 'ชื่อ - นามสกุล',
-    role: 'Chief Technology Officer',
-    tags: ['AI', 'Innovation'],
-    img: '/images/team2.png',
-    badge: 'CTO',
+    role: 'Team Member',
+    tags: ['ThaiSkill'],
+    img: '/images/member2.png',
+    badge: 'TEAM',
   },
   {
     name: 'ชื่อ - นามสกุล',
-    role: 'Head of Business',
-    tags: ['Business Dev', 'Sales'],
-    img: '/images/team4.png',
-    badge: 'BUSINESS',
+    role: 'Team Member',
+    tags: ['ThaiSkill'],
+    img: '/images/member3.png',
+    badge: 'TEAM',
   },
   {
     name: 'ชื่อ - นามสกุล',
-    role: 'Head of Product',
-    tags: ['Product', 'UX Design'],
-    img: '/images/team5.png',
-    badge: 'PRODUCT',
+    role: 'Team Member',
+    tags: ['ThaiSkill'],
+    img: '/images/member4.png',
+    badge: 'TEAM',
+  },
+  {
+    name: 'ชื่อ - นามสกุล',
+    role: 'Team Member',
+    tags: ['ThaiSkill'],
+    img: '/images/member5.png',
+    badge: 'TEAM',
   },
 ]
 
@@ -112,7 +118,7 @@ export default function Team() {
 
         <div className="tm-row tm-row-exec tm-reveal">
           {EXECUTIVES.map((m, i) => (
-            <div key={i} className={`tm-card tm-card-exec${m.placeholder ? ' tm-card-placeholder' : ''}`}>
+            <div key={i} className="tm-card tm-card-exec">
               {/* Glow ring */}
               <div className="tm-ring" />
 
@@ -121,17 +127,7 @@ export default function Team() {
 
               {/* Avatar */}
               <div className="tm-avatar tm-avatar-lg">
-                {m.placeholder ? (
-                  <>
-                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1" strokeLinecap="round" strokeLinejoin="round">
-                      <circle cx="12" cy="8" r="4"/>
-                      <path d="M4 20c0-4 3.6-7 8-7s8 3 8 7"/>
-                    </svg>
-                    <span className="tm-placeholder-label">รอประกาศ</span>
-                  </>
-                ) : (
-                  <Image src={m.img!} alt={m.name} width={160} height={160} />
-                )}
+                <Image src={m.img!} alt={m.name} width={160} height={160} />
               </div>
 
               {/* Info */}
