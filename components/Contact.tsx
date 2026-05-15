@@ -28,7 +28,7 @@ export default function Contact() {
     setSending(true)
     setContactDone(null)
     try {
-      const r = await fetch(formspreeUrl(CONTACT_ID), {
+      const r = await fetch(`https://formspree.io/f/${CONTACT_ID}`, {
         method:  'POST',
         headers: { Accept: 'application/json', 'Content-Type': 'application/json' },
         body:    JSON.stringify({ name: cName, email: cEmail, message: cMsg }),

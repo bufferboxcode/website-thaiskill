@@ -3,7 +3,16 @@
 import { useEffect } from 'react'
 import Image from 'next/image'
 
-const EXECUTIVES = [
+type Member = {
+  name: string
+  role: string
+  tags: string[]
+  img: string | null
+  badge: string
+  placeholder?: boolean
+}
+
+const EXECUTIVES: Member[] = [
   {
     name: 'ผู้อำนวยการ',
     role: 'School Director',
@@ -21,7 +30,7 @@ const EXECUTIVES = [
   },
 ]
 
-const TEAM = [
+const TEAM: Member[] = [
   {
     name: 'ชื่อ - นามสกุล',
     role: 'Chief Executive Officer',
