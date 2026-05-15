@@ -2,26 +2,16 @@ rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
 
-    // ── Contact form submissions ──────────────────────────────
-    // Anyone can write, no one can read from client (admin only via Firebase Console)
+    // Contact form submissions — anyone can write, no client read
     match /thaiskill_contacts/{docId} {
-      allow create: if
-        request.resource.data.keys().hasAll(['name', 'email', 'message', 'createdAt']) &&
-        request.resource.data.name   is string && request.resource.data.name.size()    <= 100 &&
-        request.resource.data.email  is string && request.resource.data.email.size()   <= 200 &&
-        request.resource.data.message is string && request.resource.data.message.size() <= 2000;
-      allow read: if false;  // read via Firebase Console only
+      allow create: if true;
+      allow read, update, delete: if false;
     }
 
-    // ── Public comments ───────────────────────────────────────
-    // Anyone can read + write (no auth required — matches masabqurban.com pattern)
+    // Public comments — anyone can read and post
     match /thaiskill_comments/{docId} {
-      allow read: if true;
-      allow create: if
-        request.resource.data.keys().hasAll(['name', 'message', 'createdAt']) &&
-        request.resource.data.name    is string && request.resource.data.name.size()    <= 100 &&
-        request.resource.data.message is string && request.resource.data.message.size() <= 1000;
-      allow update, delete: if false;  // ป้องกันการแก้ไข/ลบ
+      allow read, create: if true;
+      allow update, delete: if false;
     }
 
   }

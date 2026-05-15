@@ -72,12 +72,18 @@ export default function Contact() {
     setSending(true)
     setContactDone(null)
     try {
-      await addDoc(collection(db, CONTACTS_COL), {
-        name:      cName,
-        email:     cEmail,
-        message:   cMsg,
-        createdAt: serverTimestamp(),
-      })
+      // Race against 10-second timeout so button never hangs forever
+      await Promise.race([
+        addDoc(collection(db, CONTACTS_COL), {
+          name:      cName,
+          email:     cEmail,
+          message:   cMsg,
+          createdAt: serverTimestamp(),
+        }),
+        new Promise<never>((_, reject) =>
+          setTimeout(() => reject(new Error('timeout')), 10_000),
+        ),
+      ])
       setContactDone(true)
       setCName(''); setCEmail(''); setCMsg('')
     } catch (err) {
