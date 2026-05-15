@@ -919,27 +919,6 @@ html, body {
     0 0 40px rgba(245,158,11,0.08) inset;
 }
 
-/* Animated purple-gold spinning border */
-.tm-card-bu-head::before {
-  background: conic-gradient(
-    from 0deg,
-    #9333ea   0deg,
-    #c084fc  60deg,
-    #fbbf24 120deg,
-    #f59e0b 150deg,
-    #fbbf24 180deg,
-    #a855f7 240deg,
-    #7c3aed 300deg,
-    #d97706 330deg,
-    #9333ea 360deg
-  ) !important;
-  animation: buHeadBorder 3s linear infinite;
-  opacity: 1 !important;
-}
-@keyframes buHeadBorder {
-  from { transform: rotate(0deg); }
-  to   { transform: rotate(360deg); }
-}
 
 .tm-card-bu-head:hover {
   box-shadow:
