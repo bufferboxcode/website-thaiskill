@@ -2,7 +2,17 @@
 
 import { useEffect, useRef } from 'react'
 
+// ─── GAS JSON endpoint (แนะนำ) — ตั้งใน Vercel env vars ───────────────────
+// NEXT_PUBLIC_GAS_REVENUE_URL = URL จาก Google Apps Script (gas-revenue-api.js)
+// ไม่ได้รับผลจาก: เพิ่ม row / column / sheet / formula ใดๆ ใน Google Sheet
+const GAS_REVENUE_URL = process.env.NEXT_PUBLIC_GAS_REVENUE_URL ?? ''
+
+// ─── CSV fallback (ใช้เมื่อ GAS URL ยังไม่ได้ตั้ง) ─────────────────────────
+// อ่านจาก row ที่ column A = "revenue_current" เท่านั้น
+// → ไม่สนใจตำแหน่ง row / column อื่น ป้องกัน shift จากการเพิ่ม row/column
+// ⚠️ ยังอาจมีปัญหาหากเพิ่ม tab ใหม่ที่มีชื่อ sheet ตรงกัน → ใช้ GAS แทนดีกว่า
 const SHEETS_CSV_URL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vQ6P9WqCiP8Nq5p_TBvXF2VmG9VpTzwj2Sx_CmPmjRZ12EFuTRbqP5yWz_Nk0H10P8EnmAjet9rwmNF/pub?output=csv'
+
 const FLUCTUATION = 5000   // counter wanders ±5,000 from the live base
 const BASE_ORDERS = 3_847
 const BASE_TODAY = 284_500
@@ -91,8 +101,25 @@ export default function Hero() {
     let particleRaf = 0
     let animRaf = 0
 
-    // Fetch live base value — same CSV + parsing logic as Dashboard
-    function fetchBase() {
+    // ── Hardcoded fallback value ──────────────────────────────────────────────
+    const FALLBACK_REVENUE = 6_151_200
+
+    // ── Apply a confirmed revenue value ──────────────────────────────────────
+    function applyRevenue(n: number) {
+      baseRevenue = n
+      if (!loaded) animCurrent = n   // snap only on first load
+      loaded = true
+    }
+
+    // ── Layer 3: hardcode (last resort) ──────────────────────────────────────
+    function useFallback() {
+      if (!loaded) applyRevenue(FALLBACK_REVENUE)
+    }
+
+    // ── Layer 2: CSV fallback ─────────────────────────────────────────────────
+    // อ่านเฉพาะ row ที่ column A = "revenue_current"
+    // → ไม่ได้รับผลจากการเพิ่ม row / column อื่น
+    function fetchFromCSV() {
       fetch(SHEETS_CSV_URL + '&t=' + Date.now(), {
         cache: 'no-store',
         headers: { 'Cache-Control': 'no-cache, no-store', Pragma: 'no-cache' },
@@ -104,31 +131,39 @@ export default function Hero() {
             const parts = line.split(',')
             if (parts.length < 2) return
             const key = parts[0].trim().replace(/^"|"$/g, '')
-            if (key !== 'revenue_current') return
+            if (key !== 'revenue_current') return          // ← key-based lookup เท่านั้น
             const raw = parts.slice(1).join(',').trim().replace(/^"|"$/g, '')
             const cleaned = raw.replace(/[฿$€£\s,]/g, '')
             const n = parseFloat(cleaned)
-            if (!isNaN(n) && n > 0) {
-              baseRevenue = n
-              if (!loaded) animCurrent = n   // only snap on first load
-              loaded = true
-              found = true
+            if (!isNaN(n) && n > 0) { applyRevenue(n); found = true }
+          })
+          if (!found) useFallback()
+        })
+        .catch(useFallback)
+    }
+
+    // ── Layer 1: GAS JSON endpoint (แนะนำ / ทนทานสุด) ───────────────────────
+    // อ่านจาก Named Range → ไม่ขยับแม้เพิ่ม row / column / sheet / formula
+    function fetchBase() {
+      if (GAS_REVENUE_URL) {
+        fetch(GAS_REVENUE_URL + '?t=' + Date.now(), {
+          cache: 'no-store',
+          headers: { 'Cache-Control': 'no-cache, no-store', Pragma: 'no-cache' },
+        })
+          .then(r => r.json())
+          .then((data: { ok: boolean; revenue: number }) => {
+            if (data.ok && data.revenue > 0) {
+              applyRevenue(data.revenue)
+            } else {
+              fetchFromCSV()           // GAS ตอบ ok:false → ลอง CSV
             }
           })
-          if (!found && !loaded) {
-            baseRevenue = 6_151_200
-            animCurrent = baseRevenue
-            loaded = true
-          }
-        })
-        .catch(() => {
-          if (!loaded) {
-            baseRevenue = 6_151_200
-            animCurrent = baseRevenue
-            loaded = true
-          }
-        })
+          .catch(fetchFromCSV)         // GAS fetch ล้มเหลว → ลอง CSV
+      } else {
+        fetchFromCSV()                 // ยังไม่ได้ตั้ง GAS URL → ลอง CSV
+      }
     }
+
     fetchBase()
     // Refresh every 5 minutes so counter base stays current
     const heroRefreshInterval = setInterval(fetchBase, 5 * 60 * 1000)
