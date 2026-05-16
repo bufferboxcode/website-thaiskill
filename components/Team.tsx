@@ -100,8 +100,8 @@ export default function Team() {
             TEAM · THAISKILL
           </span>
           <h2 className="tm-title">
-            ทีมที่ออกแบบ<br />
-            <span className="tm-title-accent">อนาคตของ กฟภ.</span>
+            ทีมที่ออกแบบอนาคต<br />
+            <span className="tm-title-accent">ด้านการพัฒนาบุคลากรของ กฟภ.</span>
           </h2>
           <p className="tm-sub">
             เราพัฒนาหลักสูตรที่ทำให้บุคลากร กฟภ. Upskill &amp; Reskill ได้จริง<br />
