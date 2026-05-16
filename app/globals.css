@@ -1172,13 +1172,30 @@ html, body {
 }
 @media (max-width: 640px) {
   .tm-section { padding: 72px 20px 88px; }
-  .tm-row { gap: 16px; }
-  .tm-card-exec { min-width: 155px; max-width: 185px; padding: 22px 16px 18px; }
-  .tm-avatar-lg { width: 130px; height: 130px; }
-  .tm-card-team { min-width: 155px; max-width: 185px; }
-  .tm-avatar-md { width: 140px; height: 140px; }
-  .tm-card-placeholder .tm-avatar svg { width: 44px; height: 44px; }
-  .tm-name { font-size: 13px; }
+
+  /* ── 1 card per row, full width on mobile ── */
+  .tm-row {
+    flex-direction: column;
+    align-items: center;
+    gap: 20px;
+  }
+  .tm-card-exec,
+  .tm-card-team {
+    width: 100%;
+    min-width: unset;
+    max-width: 100%;
+    padding: 28px 20px 24px;
+  }
+  /* Avatar ขยายให้เต็มพื้นที่การ์ด */
+  .tm-avatar-lg {
+    width: min(260px, 72vw);
+    height: min(260px, 72vw);
+  }
+  .tm-avatar-md {
+    width: min(240px, 68vw);
+    height: min(240px, 68vw);
+  }
+  .tm-name { font-size: 15px; }
 }
 
 /* ─── Services / Bookshelf ───────────────────────────────── */
