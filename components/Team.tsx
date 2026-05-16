@@ -34,21 +34,7 @@ const TEAM: Member[] = [
     name: 'ชื่อ - นามสกุล',
     role: 'Team Member',
     tags: ['ThaiSkill'],
-    img: '/images/member1.png',
-    badge: 'TEAM',
-  },
-  {
-    name: 'ชื่อ - นามสกุล',
-    role: 'Team Member',
-    tags: ['ThaiSkill'],
     img: '/images/member2.png',
-    badge: 'TEAM',
-  },
-  {
-    name: 'ชื่อ - นามสกุล',
-    role: 'Team Member',
-    tags: ['ThaiSkill'],
-    img: '/images/member3.png',
     badge: 'TEAM',
   },
   {
@@ -62,7 +48,21 @@ const TEAM: Member[] = [
     name: 'ชื่อ - นามสกุล',
     role: 'Team Member',
     tags: ['ThaiSkill'],
+    img: '/images/member1.png',
+    badge: 'TEAM',
+  },
+  {
+    name: 'ชื่อ - นามสกุล',
+    role: 'Team Member',
+    tags: ['ThaiSkill'],
     img: '/images/member5.png',
+    badge: 'TEAM',
+  },
+  {
+    name: 'ชื่อ - นามสกุล',
+    role: 'Team Member',
+    tags: ['ThaiSkill'],
+    img: '/images/member3.png',
     badge: 'TEAM',
   },
 ]
