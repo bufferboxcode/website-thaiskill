@@ -2865,6 +2865,12 @@ html, body {
   gap: 24px;
   align-items: start;
 }
+/* Single card — full width centered */
+.ct-grid-single {
+  grid-template-columns: 1fr;
+  max-width: 680px;
+  margin: 0 auto;
+}
 
 /* ── Cards ── */
 .ct-card {
