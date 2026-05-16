@@ -285,6 +285,10 @@ export default function Hero() {
             </span>
             <span id="rateLabel" ref={rateLabelRef}>กำลังโหลด...</span>
           </div>
+          <div className="counter-hint">
+            <span className="counter-hint-icon">👆</span>
+            กดค้างที่ตัวเลขเพื่อดูรายได้จริง ณ ปัจจุบัน
+          </div>
         </div>
 
         {/* Stats Row */}

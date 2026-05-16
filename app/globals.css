@@ -529,6 +529,34 @@ html, body {
 }
 #rateLabel { display: none; }
 
+.counter-hint {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 5px;
+  margin-top: 12px;
+  font-size: 12px;
+  color: var(--accent);
+  opacity: 0.55;
+  letter-spacing: 0.01em;
+  animation: hintBlink 3s ease-in-out infinite;
+}
+.counter-hint-icon {
+  font-size: 13px;
+  animation: hintBounce 1.5s ease-in-out infinite;
+  display: inline-block;
+}
+@keyframes hintBounce {
+  0%, 100% { transform: translateY(0);    }
+  50%       { transform: translateY(-3px); }
+}
+@keyframes hintBlink {
+  0%, 100% { opacity: 0.55; }
+  50%       { opacity: 0.85; }
+}
+/* ซ่อน hint ตอน hover (FROZEN mode) */
+.counter-card.paused .counter-hint { opacity: 0; transition: opacity 0.2s; }
+
 .live-badge {
   display: inline-flex;
   align-items: center;
